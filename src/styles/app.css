@@ -1,0 +1,326 @@
+@import "tailwindcss";
+
+/* ============================================================
+   CAPA 1 — PRIMITIVES
+   ============================================================ */
+:root {
+  --cs-ink-900: #0a0a0a;
+  --cs-ink-700: #44403c;
+  --cs-ink-600: #57534e;
+  --cs-ink-300: #a8a29e;
+  --cs-ink-200: #d6d3d1;
+
+  --cs-paper-000: #ffffff;
+  --cs-cream-100: #fff8e7;
+  --cs-cream-200: #f5ead1;
+
+  --cs-yellow-500: #ffd600;
+  --cs-red-500: #ff3b3b;
+  --cs-blue-500: #2563eb;
+  --cs-blue-700: #1d4ed8;
+  --cs-cyan-400: #22d3ee;
+
+  --cs-offset-4: 8px;
+
+  --cs-halftone-fine: 6px;
+  --cs-halftone-med: 10px;
+  --cs-halftone-coarse: 16px;
+  --cs-halftone-dot: 1.6px;
+}
+
+/* ============================================================
+   CAPA 2 — SEMANTIC
+   ============================================================ */
+:root {
+  --color-canvas: var(--cs-cream-100);
+  --color-surface: var(--cs-paper-000);
+  --color-structure: var(--cs-ink-900);
+
+  --color-text: var(--cs-ink-900);
+  --color-text-muted: var(--cs-ink-700);
+
+  --color-link: var(--cs-blue-500);
+  --color-link-hover: var(--cs-blue-700);
+
+  --color-focus-ring: var(--cs-ink-900);
+  --color-focus-halo: var(--cs-yellow-500);
+
+  --color-shadow: var(--cs-ink-900);
+
+  --color-halftone: var(--cs-ink-900);
+  --halftone-opacity: 0.12;
+}
+
+/* Pagina en NEGATIVO — data-theme="invert" */
+[data-theme="invert"] {
+  --color-canvas: var(--cs-ink-900);
+  --color-surface: var(--cs-ink-900);
+  --color-structure: var(--cs-cream-100);
+  --color-shadow: var(--cs-cream-100);
+  --color-text: var(--cs-cream-100);
+  --color-text-muted: var(--cs-ink-200);
+  --color-link: var(--cs-yellow-500);
+  --color-link-hover: var(--cs-cyan-400);
+  --color-focus-ring: var(--cs-cream-100);
+  --color-focus-halo: var(--cs-blue-500);
+  --color-halftone: var(--cs-cream-100);
+  --halftone-opacity: 0.1;
+}
+
+/* ============================================================
+   CAPA 3 — COMPONENT
+   ============================================================ */
+:root {
+  --bubble-tail-size: 18px;
+  --bubble-border-width: 3px;
+  --bubble-bg: var(--color-surface);
+
+  --focus-ring-width: 4px;
+  --focus-ring-offset: 3px;
+  --focus-halo-width: 8px;
+
+  --page-perspective: 2200px;
+}
+
+/* ============================================================
+   TAILWIND v4 — @theme
+   ============================================================ */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #44403c;
+  --color-ink-subtle: #57534e;
+  --color-ink-dim: #a8a29e;
+  --color-ink-faint: #d6d3d1;
+  --color-paper: #ffffff;
+  --color-canvas: #fff8e7;
+  --color-canvas-deep: #f5ead1;
+
+  --color-pow: #ffd600;
+  --color-bam: #ff3b3b;
+  --color-bam-deep: #c81e1e;
+  --color-zap: #2563eb;
+  --color-zap-deep: #1d4ed8;
+  --color-boom: #7c3aed;
+  --color-zing: #22d3ee;
+
+  --color-success: #22c55e;
+  --color-warning: #ffb800;
+  --color-neutral: #44403c;
+
+  --font-display: "Comic Shanns", "Lexend Mega", system-ui, sans-serif;
+  --font-sans: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --text-display: clamp(2.75rem, 7vw, 5.5rem);
+  --text-display--line-height: 0.9;
+  --text-display--letter-spacing: -0.01em;
+  --text-display--font-weight: 700;
+
+  --text-h1: clamp(2rem, 4.5vw, 3.25rem);
+  --text-h1--line-height: 1;
+
+  --text-h2: clamp(1.6rem, 3.2vw, 2.25rem);
+  --text-h2--line-height: 1.05;
+
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.25;
+
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.6;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.08em;
+
+  --shadow-hard-xs: 2px 2px 0 var(--color-shadow);
+  --shadow-hard-sm: 4px 4px 0 var(--color-shadow);
+  --shadow-hard-md: 6px 6px 0 var(--color-shadow);
+  --shadow-hard-lg: 8px 8px 0 var(--color-shadow);
+  --shadow-hard-xl: 12px 12px 0 var(--color-shadow);
+  --shadow-hard-none: 0 0 0 var(--color-shadow);
+
+  --radius-bubble: 28px;
+  --radius-pill: 999px;
+
+  --ease-comic-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-comic-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-pop-in: pop-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Tailwind v4 no tiene namespace --border-width-*: van como @utility. */
+@utility border-comic {
+  border-width: 3px;
+}
+@utility border-comic-md {
+  border-width: 4px;
+}
+@utility border-panel {
+  border-width: 6px;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.6) rotate(var(--sfx-rot, -8deg));
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12) rotate(var(--sfx-rot, -8deg));
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(var(--sfx-rot, -8deg));
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   FUENTE DISPLAY (self-hosted)
+   ============================================================ */
+@font-face {
+  font-family: "Comic Shanns";
+  src: url("/fonts/comic-shanns-2.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  ascent-override: 90%;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--cs-cream-100);
+  color: var(--cs-ink-900);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Foco: anillo doble (tinta + halo) — sobrevive sobre claro y sobre negativo. */
+:where(a, button, [role="button"], input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: 0 0 0 var(--focus-halo-width) var(--color-focus-halo);
+}
+
+/* ============================================================
+   HALFTONE (Ben-Day) — CSS puro, cero imagenes
+   ============================================================ */
+.halftone {
+  --size: var(--cs-halftone-med);
+  --dot: var(--cs-halftone-dot);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--halftone-opacity);
+  background-image:
+    radial-gradient(
+      circle at 25% 25%,
+      var(--color-halftone) var(--dot),
+      transparent calc(var(--dot) + 0.5px)
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      var(--color-halftone) var(--dot),
+      transparent calc(var(--dot) + 0.5px)
+    );
+  background-size: var(--size) var(--size);
+}
+.halftone--fine {
+  --size: var(--cs-halftone-fine);
+  --dot: 1.2px;
+}
+.halftone--coarse {
+  --size: var(--cs-halftone-coarse);
+  --dot: 2.4px;
+}
+
+/* ============================================================
+   SPEECH BUBBLE — cola de 2 triangulos (exterior=borde, interior=relleno)
+   ============================================================ */
+.bubble {
+  position: relative;
+}
+.bubble::before,
+.bubble::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.bubble::before {
+  bottom: calc(-1 * var(--bubble-tail-size) - var(--bubble-border-width));
+  left: 32px;
+  border-width: var(--bubble-tail-size) var(--bubble-tail-size) 0 0;
+  border-color: var(--color-structure) transparent transparent transparent;
+}
+.bubble::after {
+  bottom: calc(-1 * var(--bubble-tail-size) + var(--bubble-border-width));
+  left: calc(32px + var(--bubble-border-width));
+  border-width: calc(var(--bubble-tail-size) - var(--bubble-border-width))
+    calc(var(--bubble-tail-size) - var(--bubble-border-width)) 0 0;
+  border-color: var(--bubble-bg) transparent transparent transparent;
+}
+
+/* ============================================================
+   MOTOR DEL COMIC (page-turn)
+
+   CRITICO — MDN transform-style: `opacity < 1`, `overflow != visible`,
+   `filter`, `clip-path` y `content-visibility` fuerzan `flat` y MATAN el 3D.
+   Por eso:
+     - las hojas inactivas se ocultan con `visibility`, NUNCA con opacity
+     - el degradado del giro va en un hijo overlay, no en la hoja
+     - el stage no lleva overflow:hidden
+   La sombra dura `8px 8px 0` es segura (filter: drop-shadow lo habria roto).
+   ============================================================ */
+.page-stage {
+  position: relative;
+  perspective: var(--page-perspective);
+  transform-style: preserve-3d;
+}
+
+.page-leaf {
+  transform-origin: left center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Sin JS (crawler o fallo de carga): documento lineal, todo visible. */
+html:not([data-js]) .page-leaf {
+  position: static !important;
+  visibility: visible !important;
+  transform: none !important;
+  margin-bottom: 3rem;
+}
+html:not([data-js]) .page-stage {
+  perspective: none !important;
+}
+
+/* ============================================================
+   REDUCED MOTION — red de seguridad global
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .page-stage {
+    perspective: none !important;
+  }
+}
