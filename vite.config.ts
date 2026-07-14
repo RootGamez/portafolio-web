@@ -12,15 +12,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    // La media de public/media ya viene optimizada (WebM/AVIF); no se re-procesa.
+    // La media de public/media ya viene optimizada (MP4/AVIF); no se re-procesa.
     assetsInlineLimit: 4096,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          motion: ["motion"],
-          gsap: ["gsap"],
-        },
-      },
-    },
   },
 });

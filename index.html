@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Marca el documento como "con JS". Todo el CSS del libro (posicionado
+      absoluto de las hojas, perspectiva, ocultado) cuelga de html[data-js].
+      Un crawler sin JS ve un documento lineal con las 7 paginas visibles.
+      Va inline y antes del CSS para que no haya flash.
+    -->
+    <script>
+      document.documentElement.setAttribute("data-js", "");
+    </script>
+
+    <title>Anthony Gámez — Desarrollador Full Stack React &amp; Django</title>
+    <meta
+      name="description"
+      content="Anthony Gámez: desarrollador full stack (React + Django REST Framework) y líder técnico en Screen IA. Proyectos reales en producción, de la idea al despliegue."
+    />
+    <meta name="author" content="Anthony Gámez" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://anthonygamez.dev/" />
+    <meta name="theme-color" content="#FFD600" />
+
+    <!-- Open Graph / LinkedIn / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://anthonygamez.dev/" />
+    <meta property="og:site_name" content="Anthony Gámez — Portafolio" />
+    <meta property="og:locale" content="es_PE" />
+    <meta
+      property="og:title"
+      content="Anthony Gámez — Desarrollador Full Stack React &amp; Django"
+    />
+    <meta
+      property="og:description"
+      content="Desarrollador full stack (React + Django REST Framework) y líder técnico en Screen IA. Proyectos reales en producción: e-commerce, marketplace DOOH y más."
+    />
+    <meta property="og:image" content="https://anthonygamez.dev/media/img/anthony.webp" />
+    <meta
+      property="og:image:alt"
+      content="Anthony Gámez, desarrollador full stack, retrato en estilo cómic brutalista"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Anthony Gámez — Desarrollador Full Stack React &amp; Django"
+    />
+    <meta
+      name="twitter:description"
+      content="Desarrollador full stack (React + Django REST Framework) y líder técnico en Screen IA. Proyectos reales en producción."
+    />
+    <meta name="twitter:image" content="https://anthonygamez.dev/media/img/anthony.webp" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Solo la fuente display es critica (aparece en la portada). -->
+    <link
+      rel="preload"
+      href="/fonts/comic-shanns-2.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Anthony Gámez",
+        "url": "https://anthonygamez.dev/",
+        "image": "https://anthonygamez.dev/media/img/anthony.webp",
+        "email": "mailto:anthonygamez2858@gmail.com",
+        "jobTitle": "Líder de Equipo de Desarrollo de Software",
+        "worksFor": { "@type": "Organization", "name": "Screen IA" },
+        "alumniOf": [
+          { "@type": "EducationalOrganization", "name": "SENATI" },
+          { "@type": "EducationalOrganization", "name": "CEU Centro de Especialización" }
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Pisco",
+          "addressRegion": "Ica",
+          "addressCountry": "PE"
+        },
+        "knowsAbout": [
+          "React",
+          "Django REST Framework",
+          "TypeScript",
+          "PostgreSQL",
+          "AWS",
+          "Cloudflare Workers",
+          "Docker",
+          "Tailwind CSS",
+          "GitFlow",
+          "Arquitectura de microservicios",
+          "Liderazgo técnico de equipos de desarrollo"
+        ],
+        "sameAs": [
+          "https://github.com/RootGamez",
+          "https://www.linkedin.com/in/anthony-gamez-2bab19242"
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
