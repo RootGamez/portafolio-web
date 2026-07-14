@@ -1,0 +1,46 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Entorno
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# Cloudflare
+.wrangler/
+.cloudflare/
+
+# Assets fuente pesados (originales sin optimizar).
+# Los originales se conservan localmente en assets/raw/ pero NO se versionan.
+# Las versiones optimizadas para web viven en public/media/ y SI se versionan.
+assets/raw/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Test / coverage
+coverage/
+.nyc_output/
