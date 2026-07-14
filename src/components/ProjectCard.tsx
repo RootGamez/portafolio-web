@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { GithubIcon } from "@/components/icons/Brand";
 import type { Project } from "@/data/projects";
 import { StatusBadge } from "@/components/comic/StatusBadge";
 import { Onomatopoeia } from "@/components/comic/Onomatopoeia";
@@ -150,7 +151,7 @@ export function ProjectCard({ project, rotate = 0, featured = false }: Props) {
             rel="noreferrer noopener"
             className="inline-flex items-center gap-1.5 font-display text-small uppercase text-[var(--color-link)] underline decoration-2 underline-offset-[3px] hover:text-[var(--color-link-hover)]"
           >
-            <Github size={16} strokeWidth={3} aria-hidden="true" />
+            <GithubIcon size={16} />
             Código
           </a>
         )}

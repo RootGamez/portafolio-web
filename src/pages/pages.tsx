@@ -1,4 +1,5 @@
-import { Github, Linkedin, Mail, MapPin, FileDown } from "lucide-react";
+import { Mail, MapPin, FileDown } from "lucide-react";
+import { GithubIcon, LinkedinIcon } from "@/components/icons/Brand";
 import type { ComicPageDef } from "@/components/comic/ComicBook";
 import { Panel } from "@/components/comic/Panel";
 import { SpeechBubble } from "@/components/comic/SpeechBubble";
@@ -311,13 +312,13 @@ function Contacto() {
         </li>
         <li>
           <ComicButton variant="accent" href={LINKEDIN}>
-            <Linkedin size={18} strokeWidth={3} aria-hidden="true" />
+            <LinkedinIcon size={18} />
             LinkedIn
           </ComicButton>
         </li>
         <li>
           <ComicButton variant="accent" href={GITHUB}>
-            <Github size={18} strokeWidth={3} aria-hidden="true" />
+            <GithubIcon size={18} />
             GitHub
           </ComicButton>
         </li>
