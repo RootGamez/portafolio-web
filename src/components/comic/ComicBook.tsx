@@ -5,10 +5,13 @@ import { useComicNavigation } from "@/hooks/useComicNavigation";
 import { useTransitionMode } from "@/hooks/useTransitionMode";
 import { ComicButton } from "./ComicButton";
 
+/** Cada pagina del comic tiene su propio color de canvas. Ver [data-tone] en app.css. */
+export type PageTone = "pow" | "zing" | "bam" | "ink" | "zap" | "boom" | "blue";
+
 export type ComicPageDef = {
   readonly slug: string;
   readonly title: string;
-  readonly theme?: "light" | "invert";
+  readonly tone: PageTone;
   readonly render: () => ReactNode;
 };
 
@@ -37,17 +40,19 @@ export function ComicBook({ pages }: Props) {
   const mode = useTransitionMode();
 
   const headingRefs = useRef<(HTMLElement | null)[]>([]);
-  const isFirstRender = useRef(true);
+  const focusedIndex = useRef(index);
   const touchStartX = useRef<number | null>(null);
 
   // Tras pasar pagina el foco viaja al titulo de la nueva pagina. Sin esto el
   // foco se queda huerfano en el boton y el lector de pantalla no se entera de
   // que el contenido cambio.
+  //
+  // Se compara contra el indice ya enfocado en vez de usar un flag de "primer
+  // render": StrictMode ejecuta los efectos dos veces en dev y un flag se
+  // consumiria en la primera pasada, disparando un foco espurio al cargar.
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (focusedIndex.current === index) return;
+    focusedIndex.current = index;
     headingRefs.current[index]?.focus();
   }, [index]);
 
@@ -84,11 +89,13 @@ export function ComicBook({ pages }: Props) {
 
   return (
     <div
-      className="relative mx-auto w-full max-w-[1280px] px-3 pb-28 pt-4 sm:px-6"
+      className="relative mx-auto w-full px-2 pb-[4.75rem] pt-2 sm:px-4 sm:pb-[5.5rem] sm:pt-3"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <div className="page-stage relative min-h-[calc(100dvh-11rem)]">
+      {/* La hoja ocupa practicamente toda la pantalla: en desktop el contenido
+          debe caber sin scroll. El unico alto reservado es el del pager. */}
+      <div className="page-stage relative h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-6.5rem)]">
         {pages.map((page, i) => {
           const isCurrent = i === index;
           // Solo se compositan las hojas de la ventana [index-1, index+1]. El
@@ -99,7 +106,7 @@ export function ComicBook({ pages }: Props) {
             <motion.section
               key={page.slug}
               id={`pagina-${page.slug}`}
-              data-theme={page.theme === "invert" ? "invert" : undefined}
+              data-tone={page.tone}
               className="page-leaf absolute inset-0"
               aria-hidden={!isCurrent}
               inert={!isCurrent}
@@ -112,18 +119,20 @@ export function ComicBook({ pages }: Props) {
                 pointerEvents: isCurrent ? "auto" : "none",
               }}
             >
-              <div className="flex h-full flex-col border-panel border-[var(--color-structure)] bg-[var(--color-canvas)] p-4 shadow-hard-xl sm:p-6 md:p-8">
+              <div className="flex h-full flex-col border-panel border-ink bg-[var(--color-canvas)] p-3 shadow-hard-lg sm:p-5 lg:p-7">
                 <h2
                   ref={(node) => {
                     headingRefs.current[i] = node;
                   }}
                   tabIndex={-1}
-                  className="mb-6 font-display text-h1 uppercase text-[var(--color-text)] outline-none"
+                  className="mb-3 shrink-0 font-display text-h2 uppercase text-[var(--color-canvas-text)] outline-none sm:mb-4"
                 >
                   {page.title}
                 </h2>
 
-                <div className="min-h-0 flex-1 overflow-y-auto">{page.render()}</div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                  {page.render()}
+                </div>
               </div>
             </motion.section>
           );
@@ -140,7 +149,13 @@ export function ComicBook({ pages }: Props) {
           <span className="hidden sm:inline">Anterior</span>
         </ComicButton>
 
-        <ol className="flex items-center gap-1.5" aria-label="Ir a una página">
+        {/* En movil los 7 botones no caben junto a Anterior/Siguiente:
+            se sustituyen por el contador. */}
+        <span className="border-comic border-ink bg-pow px-3 py-1 font-display text-caption tabular-nums text-ink shadow-hard-xs sm:hidden">
+          {index + 1} / {total}
+        </span>
+
+        <ol className="hidden items-center gap-1.5 sm:flex" aria-label="Ir a una página">
           {pages.map((page, i) => (
             <li key={page.slug}>
               <button

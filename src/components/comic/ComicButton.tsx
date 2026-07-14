@@ -26,12 +26,15 @@ const VARIANTS: Record<Variant, string> = {
   primary: "bg-pow text-ink",
   // azul + papel = 5.17:1  (PROHIBIDO: rojo #FF3B3B + blanco = 3.53:1)
   accent: "bg-zap text-paper",
-  ghost: "bg-transparent text-[var(--color-text)]",
+  // Papel + tinta = 19.80:1. NO es transparente a proposito: sobre un canvas
+  // saturado (azul, violeta, negro) un boton transparente con texto tinta
+  // bajaria de 4.5:1. El relleno blanco lo hace seguro en las 7 paginas.
+  ghost: "bg-paper text-ink",
 };
 
 const BASE =
   "inline-flex min-h-12 cursor-pointer touch-manipulation items-center justify-center gap-2 " +
-  "border-comic-md border-[var(--color-structure)] px-6 py-3 " +
+  "border-comic-md border-ink px-5 py-3 " +
   "font-display text-[18px] uppercase leading-none " +
   "shadow-hard-sm transition-[transform,box-shadow] duration-[120ms] ease-comic-out " +
   "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md " +

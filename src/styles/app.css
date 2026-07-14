@@ -36,6 +36,11 @@
   --color-surface: var(--cs-paper-000);
   --color-structure: var(--cs-ink-900);
 
+  /* Texto que va DIRECTO sobre el canvas de color (titulo y entradilla). */
+  --color-canvas-text: var(--cs-ink-900);
+  --color-canvas-muted: var(--cs-ink-700);
+
+  /* Texto DENTRO de una vineta: la vineta es siempre papel blanco. */
   --color-text: var(--cs-ink-900);
   --color-text-muted: var(--cs-ink-700);
 
@@ -51,20 +56,66 @@
   --halftone-opacity: 0.12;
 }
 
-/* Pagina en NEGATIVO — data-theme="invert" */
-[data-theme="invert"] {
+/* ============================================================
+   TONO POR PAGINA — cada pagina del comic tiene su propio color
+
+   Regla que mantiene todo accesible: las VINETAS son siempre papel blanco
+   con borde y sombra de tinta. Lo unico que cambia es el CANVAS (el "gutter"
+   entre vinetas, que en un comic impreso tambien va coloreado).
+   Asi el unico texto que toca el color saturado es el titulo y la entradilla,
+   y para ese par el contraste esta calculado abajo, uno por uno.
+   ============================================================ */
+
+/* Amarillo — ink 14.02:1 */
+[data-tone="pow"] {
+  --color-canvas: #ffd600;
+  --color-canvas-text: var(--cs-ink-900);
+  --color-canvas-muted: #57534e;
+}
+/* Cian — ink 10.96:1 */
+[data-tone="zing"] {
+  --color-canvas: #22d3ee;
+  --color-canvas-text: var(--cs-ink-900);
+  --color-canvas-muted: #44403c;
+}
+/* Rojo pop — ink 5.60:1  (blanco encima seria 3.53:1 -> PROHIBIDO) */
+[data-tone="bam"] {
+  --color-canvas: #ff3b3b;
+  --color-canvas-text: var(--cs-ink-900);
+  --color-canvas-muted: var(--cs-ink-900);
+}
+/* Negro — crema 18.70:1. La sombra dura pasa a amarillo: la tinta seria invisible. */
+[data-tone="ink"] {
   --color-canvas: var(--cs-ink-900);
-  --color-surface: var(--cs-ink-900);
-  --color-structure: var(--cs-cream-100);
-  --color-shadow: var(--cs-cream-100);
-  --color-text: var(--cs-cream-100);
-  --color-text-muted: var(--cs-ink-200);
-  --color-link: var(--cs-yellow-500);
-  --color-link-hover: var(--cs-cyan-400);
+  --color-canvas-text: var(--cs-cream-100);
+  --color-canvas-muted: var(--cs-ink-200);
+  --color-shadow: #ffd600;
   --color-focus-ring: var(--cs-cream-100);
   --color-focus-halo: var(--cs-blue-500);
-  --color-halftone: var(--cs-cream-100);
-  --halftone-opacity: 0.1;
+}
+/* Verde — ink 8.69:1 */
+[data-tone="zap"] {
+  --color-canvas: #22c55e;
+  --color-canvas-text: var(--cs-ink-900);
+  --color-canvas-muted: #44403c;
+}
+/* Violeta — papel 5.70:1 (ink encima seria 3.3:1 -> texto claro obligatorio) */
+[data-tone="boom"] {
+  --color-canvas: #7c3aed;
+  --color-canvas-text: var(--cs-paper-000);
+  --color-canvas-muted: #ede9fe;
+  --color-shadow: #ffd600;
+  --color-focus-ring: var(--cs-cream-100);
+  --color-focus-halo: #ffd600;
+}
+/* Azul — papel 5.17:1 (ink encima seria 3.83:1 -> texto claro obligatorio) */
+[data-tone="blue"] {
+  --color-canvas: #2563eb;
+  --color-canvas-text: var(--cs-paper-000);
+  --color-canvas-muted: #dbeafe;
+  --color-shadow: #ffd600;
+  --color-focus-ring: var(--cs-cream-100);
+  --color-focus-halo: #ffd600;
 }
 
 /* ============================================================
