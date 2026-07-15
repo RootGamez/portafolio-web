@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useComicNavigation } from "@/hooks/useComicNavigation";
 import { useTransitionMode } from "@/hooks/useTransitionMode";
+import { usePageTurnSound } from "@/hooks/usePageTurnSound";
 
 /** Cada pagina del comic tiene su propio color de canvas. Ver [data-tone] en app.css. */
 export type PageTone = "pow" | "zing" | "bam" | "ink" | "zap" | "boom" | "blue";
@@ -43,6 +44,7 @@ export function ComicBook({ pages }: Props) {
   const { index, goTo, total } = useComicNavigation(slugs);
   const mode = useTransitionMode();
   const isBook = mode === "book";
+  const playPageTurn = usePageTurnSound();
 
   const leafRefs = useRef<(HTMLElement | null)[]>([]);
   const headingRefs = useRef<(HTMLElement | null)[]>([]);
@@ -115,6 +117,7 @@ export function ComicBook({ pages }: Props) {
   // El giro: reacciona al cambio de indice (hash) y anima de `visual` a `index`.
   useEffect(() => {
     if (index === visual) return;
+    playPageTurn();
 
     if (mode === "fade" || busy.current) {
       timeouts.current.forEach(clearTimeout);
@@ -202,7 +205,7 @@ export function ComicBook({ pages }: Props) {
         setVisual(to);
       }, SLIDE_MS + 30),
     ];
-  }, [index, visual, mode, isBook]);
+  }, [index, visual, mode, isBook, playPageTurn]);
 
   useEffect(() => () => timeouts.current.forEach(clearTimeout), []);
 
