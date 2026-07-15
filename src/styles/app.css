@@ -249,12 +249,30 @@
 body {
   margin: 0;
   min-height: 100dvh;
-  background-color: var(--cs-cream-100);
+  /* La "mesa" sobre la que reposa el libro. El comic ES la pantalla:
+     el documento no scrollea; cada pagina scrollea por dentro si hace falta. */
+  background-color: var(--cs-ink-900);
   color: var(--cs-ink-900);
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow: hidden;
+}
+
+/* Sin JS (crawler): documento lineal normal, con fondo de papel y scroll. */
+html:not([data-js]) body {
+  background-color: var(--cs-cream-100);
+  overflow: auto;
+}
+
+/* Scroll interno sin barra visible: el contenido sigue siendo desplazable
+   (rueda, teclado, tactil) pero la barra no rompe la ilusion de comic. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Foco: anillo doble (tinta + halo) — sobrevive sobre claro y sobre negativo. */

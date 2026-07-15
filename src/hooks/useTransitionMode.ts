@@ -2,29 +2,30 @@ import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 /**
- * `flip3d` — desktop con puntero fino: giro 3D real de la hoja.
- * `slide`  — tactil/movil: el flip 3D con perspectiva + sombras duras se sale
- *            del presupuesto de 16ms/frame en GPU movil. Un track horizontal
- *            con swipe es ademas como se leen comics en el movil.
- * `fade`   — el usuario pidio menos movimiento: crossfade corto, sin 3D.
+ * `book`  — pantalla ancha en horizontal: libro abierto a doble pagina con
+ *           giro de hoja real sobre el lomo.
+ * `slide` — movil / tablet en vertical: una pagina a la vez con deslizamiento
+ *           horizontal (el flip 3D con perspectiva + sombras duras se sale del
+ *           presupuesto de 16ms/frame en GPU movil).
+ * `fade`  — el usuario pidio menos movimiento: intercambio casi instantaneo.
  */
-export type TransitionMode = "flip3d" | "slide" | "fade";
+export type TransitionMode = "book" | "slide" | "fade";
 
-const DESKTOP_QUERY = "(min-width: 1024px) and (pointer: fine)";
+const BOOK_QUERY = "(min-width: 1024px) and (orientation: landscape)";
 
 export function useTransitionMode(): TransitionMode {
   const reduced = usePrefersReducedMotion();
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(DESKTOP_QUERY).matches,
+  const [isWide, setIsWide] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(BOOK_QUERY).matches,
   );
 
   useEffect(() => {
-    const mq = window.matchMedia(DESKTOP_QUERY);
-    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    const mq = window.matchMedia(BOOK_QUERY);
+    const onChange = (event: MediaQueryListEvent) => setIsWide(event.matches);
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
   if (reduced) return "fade";
-  return isDesktop ? "flip3d" : "slide";
+  return isWide ? "book" : "slide";
 }

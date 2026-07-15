@@ -1,12 +1,9 @@
-import { MotionConfig } from "motion/react";
 import { ComicBook } from "@/components/comic/ComicBook";
 import { comicPages } from "@/pages/pages";
 
 export default function App() {
   return (
-    // reducedMotion="user" hace que Motion respete la preferencia del sistema en
-    // todo el arbol sin tener que comprobarlo componente por componente.
-    <MotionConfig reducedMotion="user">
+    <>
       <a
         href="#pagina-portada"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:border-comic-md focus:border-ink focus:bg-pow focus:px-4 focus:py-2 focus:font-display focus:uppercase focus:text-ink focus:shadow-hard-sm"
@@ -21,6 +18,6 @@ export default function App() {
       <main>
         <ComicBook pages={comicPages} />
       </main>
-    </MotionConfig>
+    </>
   );
 }
