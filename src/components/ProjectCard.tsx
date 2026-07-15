@@ -10,11 +10,13 @@ type Props = {
   readonly project: Project;
   readonly rotate?: -3 | -2 | -1 | 0 | 1 | 2 | 3;
   readonly featured?: boolean;
+  /** Card secundaria: oculta la lista de bullets para caber en el grid inferior. */
+  readonly compact?: boolean;
 };
 
 const MAX_TILT = 6;
 
-export function ProjectCard({ project, rotate = 0, featured = false }: Props) {
+export function ProjectCard({ project, rotate = 0, featured = false, compact = false }: Props) {
   const cardRef = useRef<HTMLElement | null>(null);
   const frame = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -104,24 +106,26 @@ export function ProjectCard({ project, rotate = 0, featured = false }: Props) {
         {project.title}
       </h3>
 
-      <p className="mt-2 text-body text-[var(--color-text-muted)]">{project.tagline}</p>
+      <p className="mt-2 text-small text-[var(--color-text-muted)]">{project.tagline}</p>
 
-      <p className="mt-3 font-mono text-small font-bold text-[var(--color-text)]">
+      <p className="mt-2 font-mono text-small font-bold text-[var(--color-text)]">
         {project.role}
       </p>
 
-      <ul className="mt-3 space-y-1.5">
-        {project.bullets.map((bullet) => (
-          <li key={bullet} className="flex gap-2 text-small text-[var(--color-text-muted)]">
-            <span aria-hidden="true" className="font-bold text-zap">
-              ▸
-            </span>
-            {bullet}
-          </li>
-        ))}
-      </ul>
+      {!compact && (
+        <ul className="mt-3 space-y-1.5">
+          {project.bullets.map((bullet) => (
+            <li key={bullet} className="flex gap-2 text-small text-[var(--color-text-muted)]">
+              <span aria-hidden="true" className="font-bold text-zap">
+                ▸
+              </span>
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <ul className="mt-4 flex flex-wrap gap-1.5">
+      <ul className="mt-3 flex flex-wrap gap-1.5">
         {project.stack.map((tech) => (
           <li
             key={tech}

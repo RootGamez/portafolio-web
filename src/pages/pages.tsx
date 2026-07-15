@@ -280,7 +280,16 @@ function FueraDelCodigo() {
 /* ──────────────────────── 7. Contacto ──────────────────────── */
 function Contacto() {
   return (
-    <div className="flex h-full flex-col items-start justify-center gap-6">
+    <div className="relative flex h-full flex-col items-start justify-center gap-6">
+      {/* Rellena el espacio vacio a la derecha del canvas azul. */}
+      <Onomatopoeia
+        tone="pow"
+        rotate={-10}
+        className="absolute right-4 top-6 z-20 hidden text-[clamp(3rem,7vw,6rem)] lg:block"
+      >
+        ¡ZAS!
+      </Onomatopoeia>
+
       <SpeechBubble>
         <p className="font-bold">
           ¿Tienes un proyecto real, un equipo que necesita liderazgo técnico, o solo quieres
@@ -288,14 +297,9 @@ function Contacto() {
         </p>
       </SpeechBubble>
 
-      <div className="relative">
-        <Onomatopoeia tone="pow" rotate={-6} className="absolute -right-16 -top-4 z-20 hidden md:block">
-          ¡ZAS!
-        </Onomatopoeia>
-        <p className="font-display text-display uppercase text-[var(--color-canvas-text)]">
-          Escríbeme
-        </p>
-      </div>
+      <p className="font-display text-display uppercase text-[var(--color-canvas-text)]">
+        Escríbeme
+      </p>
 
       <ul className="flex flex-wrap gap-3">
         <li>

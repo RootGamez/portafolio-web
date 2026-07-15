@@ -82,8 +82,6 @@ Para re-generarlos hace falta `ffmpeg` sobre los archivos de `assets/raw/`.
 
 ## Pendiente
 
-- [ ] Confirmar el dominio final y reemplazar el placeholder `anthonygamez.dev`
-      en `index.html` (canonical, OG, JSON-LD) y en `public/robots.txt`.
 - [ ] Diseñar la imagen Open Graph 1200×630 (ahora usa la foto de perfil).
 - [ ] Prerenderizado en build (`vite-prerender-plugin`) para que el HTML inicial
       lleve el texto ya pintado. Los meta tags y el JSON-LD ya son estáticos, y
