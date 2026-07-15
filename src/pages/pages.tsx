@@ -39,7 +39,7 @@ function Portada() {
             alt="Anthony Gámez, desarrollador full stack, retrato dentro de un panel de cómic"
             width={900}
             height={1200}
-            className="block h-full w-full border-comic-md border-ink object-cover object-top"
+            className="block h-full w-full border-comic-md border-ink object-cover object-top lg:object-contain lg:object-center"
           />
         </picture>
       </Panel>
@@ -65,7 +65,7 @@ function SobreMi() {
       </Onomatopoeia>
 
       <SpeechBubble>
-        <p className="font-bold">«De la idea al deploy — y me quedo a mantenerlo.»</p>
+        <p className="font-bold">«De la idea al despliegue — y del despliegue al mantenimiento.»</p>
       </SpeechBubble>
 
       <Panel rotate={1} halftone="fine">
