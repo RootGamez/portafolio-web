@@ -1,5 +1,5 @@
 import { Mail, MapPin, FileDown } from "lucide-react";
-import { GithubIcon, LinkedinIcon } from "@/components/icons/Brand";
+import { GithubIcon, LinkedinIcon, WhatsappIcon } from "@/components/icons/Brand";
 import type { ComicPageDef } from "@/components/comic/ComicBook";
 import { Panel } from "@/components/comic/Panel";
 import { SpeechBubble } from "@/components/comic/SpeechBubble";
@@ -13,6 +13,7 @@ import { skillGroups } from "@/data/skills";
 const EMAIL = "anthonygamez2858@gmail.com";
 const GITHUB = "https://github.com/RootGamez";
 const LINKEDIN = "https://www.linkedin.com/in/anthony-gamez-2bab19242";
+const WHATSAPP = "https://wa.me/51994026241";
 
 function goTo(slug: string) {
   window.location.hash = `#/${slug}`;
@@ -307,6 +308,12 @@ function Contacto() {
           <ComicButton variant="primary" href={`mailto:${EMAIL}`}>
             <Mail size={18} strokeWidth={3} aria-hidden="true" />
             Email
+          </ComicButton>
+        </li>
+        <li>
+          <ComicButton variant="accent" href={WHATSAPP} ariaLabel="Escribir a Anthony Gámez por WhatsApp">
+            <WhatsappIcon size={18} />
+            WhatsApp
           </ComicButton>
         </li>
         <li>
