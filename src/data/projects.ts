@@ -97,7 +97,8 @@ export const projects: readonly Project[] = [
     status: "produccion",
     liveUrl: "https://pasodoblerun.online/",
     repoUrl: "https://github.com/RootGamez/PasoDobleRun",
-    alt: "Captura de la web de Pasodoble Run, servicios de fisioterapia, fuerza y running.",
+    media: "pasodoblerun",
+    alt: "Demo de la web de Pasodoble Run, mostrando los servicios de fisioterapia, fuerza y running.",
     pow: "¡PUM!",
   },
   {
