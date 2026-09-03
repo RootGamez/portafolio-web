@@ -6,7 +6,6 @@ export type Milestone = {
   readonly body: string;
   readonly badge?: string;
   readonly pow: string;
-  readonly tone: "pow" | "bam" | "zing" | "boom";
 };
 
 export const timeline: readonly Milestone[] = [
@@ -18,7 +17,6 @@ export const timeline: readonly Milestone[] = [
     body: "Arranca la carrera de Ingeniería de Software. Base sólida en lógica, algoritmos y fundamentos — la que sostiene todo lo demás.",
     badge: "5.º semestre",
     pow: "¡ZAS!",
-    tone: "zing",
   },
   {
     id: "ceu",
@@ -27,7 +25,6 @@ export const timeline: readonly Milestone[] = [
     period: "Jul 2025 – Dic 2025",
     body: "Primer salto profesional: full stack con React + Django REST Framework, PostgreSQL y despliegues reales en AWS (S3, EC2, CloudFront) con Docker y VPS.",
     pow: "¡BOOM!",
-    tone: "bam",
   },
   {
     id: "screenia",
@@ -36,7 +33,6 @@ export const timeline: readonly Milestone[] = [
     period: "Feb 2026 – actualidad",
     body: "De programador a líder de equipo. Sprints, revisión de pull requests, GitFlow, Docker y AWS — y la responsabilidad de definir cómo escribe código todo el equipo.",
     pow: "¡POW!",
-    tone: "pow",
   },
 ] as const;
 

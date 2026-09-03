@@ -1,22 +1,57 @@
-import { ComicBook } from "@/components/comic/ComicBook";
-import { comicPages } from "@/pages/pages";
+import { InkFilters } from "@/components/ink/InkFilters";
+import { InkRail } from "@/components/layout/InkRail";
+import { SkipLink } from "@/components/layout/SkipLink";
 
+import { Hero } from "@/sections/Hero";
+import { SobreMi } from "@/sections/SobreMi";
+import { Trayectoria } from "@/sections/Trayectoria";
+import { Proyectos } from "@/sections/Proyectos";
+import { MasProyectos } from "@/sections/MasProyectos";
+import { Produccion } from "@/sections/Produccion";
+import { Poderes } from "@/sections/Poderes";
+import { FueraDelCodigo } from "@/sections/FueraDelCodigo";
+import { Contacto } from "@/sections/Contacto";
+import { Fin } from "@/sections/Fin";
+
+/**
+ * Un solo documento, scroll real, diez secciones ancladas.
+ *
+ * Lo que desaparecio respecto al comic: el motor de paso de pagina, el
+ * posicionado absoluto de las hojas, el `inert` por pagina y el truco de
+ * html[data-js] para los crawlers. Con un documento lineal nada de eso
+ * hace falta: el contenido esta en el HTML y se indexa solo.
+ */
 export default function App() {
   return (
     <>
-      <a
-        href="#pagina-portada"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:border-comic-md focus:border-ink focus:bg-pow focus:px-4 focus:py-2 focus:font-display focus:uppercase focus:text-ink focus:shadow-hard-sm"
+      <InkFilters />
+      <SkipLink />
+      <InkRail />
+
+      {/* La nav es fija (barra arriba en movil, riel a la izquierda en desktop),
+          asi que el contenido tiene que reservar su hueco o queda debajo.
+          Ambos valores viven en app.css y son responsive. */}
+      {/* tabIndex={-1}: sin el, "Saltar al contenido" mueve la VISTA pero no el
+          FOCO — el siguiente Tab volveria al riel y el skip link no serviria
+          de nada. -1 lo hace enfocable por programa sin meterlo en el orden de
+          tabulacion, y focus:outline-none evita que el <main> entero pinte un
+          anillo al recibir un foco que el usuario no ha pedido ver. */}
+      <main
+        id="contenido"
+        tabIndex={-1}
+        className="focus:outline-none"
+        style={{ paddingTop: "var(--nav-height)", paddingLeft: "var(--rail-width)" }}
       >
-        Saltar al contenido
-      </a>
-
-      {/* Unico h1 del sitio. Visualmente oculto: la portada ya muestra el nombre
-          en grande, pero el documento necesita su encabezado real. */}
-      <h1 className="sr-only">Anthony Gámez — Desarrollador Full Stack y Líder Técnico</h1>
-
-      <main>
-        <ComicBook pages={comicPages} />
+        <Hero />
+        <SobreMi />
+        <Trayectoria />
+        <Proyectos />
+        <MasProyectos />
+        <Produccion />
+        <Poderes />
+        <FueraDelCodigo />
+        <Contacto />
+        <Fin />
       </main>
     </>
   );

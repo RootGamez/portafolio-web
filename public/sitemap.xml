@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitio de una sola URL. Un sitemap aqui no le descubre nada a Google que no
+  tenga ya: los fragmentos #slug NO son URLs indexables independientes, asi que
+  listarlos por separado no tendria efecto.
+
+  Existe por una razon concreta: robots.txt ya prometia este archivo, y una
+  promesa rota (404 en Search Console) es peor que no haberla hecho.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://rootgamez.dev/</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
