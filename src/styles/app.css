@@ -197,9 +197,25 @@
   --focus-ring-offset: 3px;
   --focus-halo-width: 8px;
 
-  /* Altura de la barra de navegacion movil: alimenta scroll-margin-top
-     para que el titulo de seccion no quede debajo al saltar por ancla. */
+  /*
+   * Espacio que ocupa la navegacion. Los dos valores son responsive porque la
+   * nav cambia de forma: barra arriba en movil, riel a la izquierda en desktop.
+   *
+   * De aqui comen tres cosas a la vez — el padding del <main>, el
+   * scroll-margin-top de las anclas y el ancho de .full-bleed — asi que un
+   * unico par de variables mantiene las tres sincronizadas. Si se tocan a
+   * mano por separado, el contenido acaba debajo de la nav o sangrando
+   * descentrado.
+   */
   --nav-height: 56px;
+  --rail-width: 0px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --nav-height: 0px; /* en desktop la barra superior desaparece */
+    --rail-width: 4rem; /* = w-16 del riel de InkRail */
+  }
 }
 
 /* ============================================================
@@ -290,6 +306,36 @@
 
   --ease-ink: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-brush: cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* ============================================================
+   RE-ANCLAJE DE LOS ALIAS DE SUELO  —  no borrar
+
+   Una custom property se resuelve DONDE SE DECLARA, no donde se usa.
+   Los alias de @theme (`--color-ground: var(--g-bg)`) viven en :root, asi
+   que ahi `--g-bg` ya vale papel y ese valor se hereda congelado: una
+   seccion con data-ground="sumi" redefine --g-bg, pero --color-ground
+   sigue valiendo papel y `bg-ground` pinta claro sobre suelo oscuro.
+
+   Volver a declarar los alias en cada elemento que redefine los --g-*
+   los obliga a resolverse alli, con los valores de ese elemento.
+   ============================================================ */
+[data-ground],
+.koma--negative {
+  --color-ground: var(--g-bg);
+  --color-on-ground: var(--g-text);
+  --color-on-ground-muted: var(--g-muted);
+  --color-on-ground-faint: var(--g-faint);
+  --color-heading: var(--g-heading);
+  --color-link: var(--g-link);
+  --color-link-hover: var(--g-link-hover);
+  --color-rule: var(--g-rule);
+  --color-structure: var(--g-structure);
+  --color-accent: var(--g-accent);
+  --color-koma: var(--g-koma-bg);
+  --color-on-koma: var(--g-koma-text);
+  --color-on-koma-muted: var(--g-koma-muted);
+  --color-on-koma-faint: var(--g-koma-faint);
 }
 
 /* Tailwind v4 no expone namespace --border-width-*: van como @utility. */

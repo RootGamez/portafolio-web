@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { EASE_INK } from "@/lib/motion";
 
 type Props = {
   /** Color de relleno del disco. Por defecto el oro de los posters. */
@@ -34,7 +35,7 @@ export function Enso({ fill = "var(--kin-500)", className = "", outline = false 
           initial={reduced ? false : { scale: 0.82, opacity: 0 }}
           whileInView={reduced ? undefined : { scale: 1, opacity: 1 }}
           viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.7, ease: EASE_INK }}
           style={{ transformOrigin: "50% 50%" }}
         />
       )}
@@ -48,7 +49,7 @@ export function Enso({ fill = "var(--kin-500)", className = "", outline = false 
           initial={reduced ? false : { pathLength: 0 }}
           whileInView={reduced ? undefined : { pathLength: 1 }}
           viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.9, ease: EASE_INK }}
         />
       )}
     </svg>

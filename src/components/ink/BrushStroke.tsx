@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { EASE_INK } from "@/lib/motion";
 
 type Props = {
   /** Path SVG del trazo. Se dibuja en un viewBox de 100x12 salvo que se diga otro. */
   readonly d?: string;
   readonly viewBox?: string;
-  readonly width?: number;
   readonly className?: string;
   readonly strokeWidth?: number;
   readonly delay?: number;
@@ -48,7 +48,7 @@ export function BrushStroke({
         initial={reduced ? false : { pathLength: 0 }}
         whileInView={reduced ? undefined : { pathLength: 1 }}
         viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
+        transition={{ duration: 0.6, ease: EASE_INK, delay }}
       />
     </svg>
   );

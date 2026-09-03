@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Screentone } from "@/components/ink/Screentone";
 
 export type ToneKind = false | "fine" | "medium" | "coarse" | "lines";
 
@@ -19,13 +20,6 @@ type Props = {
   readonly className?: string;
 };
 
-const TONE_CLASS: Record<string, string> = {
-  fine: "screentone screentone--fine",
-  medium: "screentone",
-  coarse: "screentone screentone--coarse",
-  lines: "screentone screentone--lines",
-};
-
 /**
  * El koma (vineta). Radius 0, borde grueso, sombra dura sin blur —
  * las mecanicas brutalistas intactas. Lo que cambia respecto al comic es
@@ -34,7 +28,8 @@ const TONE_CLASS: Record<string, string> = {
  * Tres capas absolutas + contenido:
  *   1. sombra (desplazada, entintada)
  *   2. marco (borde + fondo, entintado)
- *   3. trama opcional
+ *   3. trama opcional — la pinta <Screentone>, que ya es el mapa de clases
+ *      de trama del sistema; aqui se delega en vez de duplicarlo
  *   4. contenido — SIN filtro, o el texto saldria ondulado
  *
  * Estatico a proposito: no lleva hover. No se pone hover a algo que no
@@ -62,12 +57,7 @@ export function InkPanel({
         aria-hidden="true"
         className="ink-edge absolute inset-0 border-koma border-[var(--g-structure)] bg-koma"
       />
-      {tone && (
-        <span
-          aria-hidden="true"
-          className={`${TONE_CLASS[tone]} ${toneFade ? "screentone--fade" : ""}`}
-        />
-      )}
+      {tone && <Screentone kind={tone} fade={toneFade} />}
 
       {caption && (
         <span className="absolute -left-1 -top-3 z-20 border-ink-thin border-[var(--g-structure)] bg-kin px-3 py-1 font-mono text-caption uppercase text-ink">
