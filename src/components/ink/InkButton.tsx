@@ -14,35 +14,38 @@ type Props = {
 };
 
 /**
- * El componente firma: al presionar, el boton viaja EXACTAMENTE la distancia de
- * su sombra y la sombra colapsa a 0 -> "aterriza" sobre su propia sombra.
- * La invariante `active-translate === shadow-offset` (4px) no se puede romper.
+ * La invariante que firma el componente: al pulsar, el boton viaja
+ * EXACTAMENTE la distancia de su sombra y la sombra colapsa a 0 — aterriza
+ * sobre su propia sombra. `active:translate` === offset de `shadow-ink-sm`
+ * === --press-offset (4px). No se puede romper una sin romper las otras.
  *
  * Con reduced-motion se quita la TRANSICION, no el hundimiento: el feedback
- * tactil por debajo de 100ms es un requisito de usabilidad.
+ * tactil por debajo de 100ms es un requisito de usabilidad, no un adorno.
+ *
+ * Los tres variantes son seguros en los CUATRO suelos:
+ *  - primary: invierte el suelo (bg=--g-text, texto=--g-bg). Es el mismo par
+ *    medido del suelo, del reves, asi que hereda su ratio: 15.12 / 15.12 /
+ *    5.01 / 9.90 segun donde caiga.
+ *  - accent:  bermellon con crema (5.48:1), autocontenido.
+ *  - ghost:   papel con tinta (16.54:1), autocontenido.
  */
 const VARIANTS: Record<Variant, string> = {
-  // amarillo + tinta = 14.02:1
-  primary: "bg-pow text-ink",
-  // azul + papel = 5.17:1  (PROHIBIDO: rojo #FF3B3B + blanco = 3.53:1)
-  accent: "bg-zap text-paper",
-  // Papel + tinta = 19.80:1. NO es transparente a proposito: sobre un canvas
-  // saturado (azul, violeta, negro) un boton transparente con texto tinta
-  // bajaria de 4.5:1. El relleno blanco lo hace seguro en las 7 paginas.
-  ghost: "bg-paper text-ink",
+  primary: "bg-[var(--g-text)] text-[var(--g-bg)]",
+  accent: "bg-shu text-washi-hi",
+  ghost: "bg-koma text-on-koma",
 };
 
 const BASE =
   "inline-flex min-h-12 cursor-pointer touch-manipulation items-center justify-center gap-2 " +
-  "border-comic-md border-ink px-5 py-3 " +
-  "font-display text-[18px] uppercase leading-none " +
-  "shadow-hard-sm transition-[transform,box-shadow] duration-[120ms] ease-comic-out " +
-  "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md " +
-  "active:translate-x-1 active:translate-y-1 active:shadow-hard-none active:duration-[80ms] " +
-  "disabled:pointer-events-none disabled:opacity-45 disabled:shadow-hard-none " +
+  "border-[4px] border-[var(--g-structure)] px-5 py-3 " +
+  "font-poster text-[18px] uppercase leading-none tracking-wide " +
+  "shadow-ink-sm transition-[transform,box-shadow] duration-[140ms] ease-ink " +
+  "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-md " +
+  "active:translate-x-1 active:translate-y-1 active:shadow-ink-none active:duration-[80ms] " +
+  "disabled:pointer-events-none disabled:opacity-45 disabled:shadow-ink-none " +
   "motion-reduce:transition-none";
 
-export function ComicButton({
+export function InkButton({
   children,
   variant = "primary",
   href,
