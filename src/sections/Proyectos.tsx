@@ -1,14 +1,12 @@
 import { ProjectCard } from "@/components/ProjectCard";
 import { Section } from "@/components/layout/Section";
 import { Reveal } from "@/components/motion/Reveal";
-import { projects } from "@/data/projects";
+import { isFeatured, projects } from "@/data/projects";
 import { STAGGER } from "@/lib/motion";
 import { getSectionMeta } from "@/sections/meta";
 
 /* Los dos protagonistas. Se filtra por id y NO se reordena: el orden del array
    de datos es el que decide cual va arriba. */
-const FEATURED_IDS = ["jaw-project", "adflow"] as const;
-
 const META = getSectionMeta("proyectos");
 
 /* La media alterna de lado entre las dos planchas. Es el mecanismo barato que
@@ -25,9 +23,7 @@ const MEDIA_SIDES = ["start", "end"] as const;
  * koma coincide con el suelo y el acento dorado es el par medido.
  */
 export function Proyectos() {
-  const featured = projects.filter((project) =>
-    FEATURED_IDS.some((id) => id === project.id),
-  );
+  const featured = projects.filter((project) => isFeatured(project.id));
 
   return (
     <Section

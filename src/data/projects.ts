@@ -25,6 +25,19 @@ export const STATUS_LABEL: Record<ProjectStatus, string> = {
   desarrollo: "EN DESARROLLO",
 };
 
+/**
+ * Los que tienen plancha propia en 三 (Proyectos). El resto cae en 四.
+ *
+ * Vive aqui y no en las secciones porque estaba duplicada en las dos: editar
+ * una sola dejaba un proyecto fuera de ambas listas, o repetido en las dos,
+ * sin que nada fallara.
+ */
+export const featuredIds: readonly string[] = ["jaw-project", "adflow"];
+
+export function isFeatured(id: string): boolean {
+  return featuredIds.includes(id);
+}
+
 export const projects: readonly Project[] = [
   {
     id: "adflow",
@@ -100,6 +113,42 @@ export const projects: readonly Project[] = [
     media: "pasodoblerun",
     alt: "Demo de la web de Pasodoble Run, mostrando los servicios de fisioterapia, fuerza y running.",
     pow: "¡PUM!",
+  },
+  {
+    id: "screenia-plataforma",
+    title: "Screenia Plataforma",
+    tagline:
+      "El sitio de producto que une los dos negocios de una misma pantalla: CMS Pro, que opera la red de pantallas LED, y AdFlow, que vende su espacio publicitario.",
+    role: "Desarrollador y responsable del despliegue",
+    bullets: [
+      "Cuenta dos productos en una sola narrativa, sin que compitan entre sí.",
+      "Recorrido de tres pasos que conecta pantalla, operación y venta sin jerga técnica.",
+      "Contacto directo por WhatsApp: cero formularios, cero intermediarios.",
+    ],
+    stack: ["Next.js", "Turbopack", "TypeScript", "Tailwind"],
+    status: "produccion",
+    liveUrl: "https://plataforma.screeniadigital.com/",
+    media: "plataforma",
+    alt: "Demo del sitio de Screenia Plataforma, mostrando CMS Pro para operar redes de pantallas LED y AdFlow para vender su espacio publicitario.",
+    pow: "¡ZOOM!",
+  },
+  {
+    id: "od-jose-cabana",
+    title: "Od. Jose Cabaña",
+    tagline:
+      "Web de una consulta odontológica en Calabozo, Guárico. Tratamientos, resultados y agenda por WhatsApp, con SEO local para que la encuentre el paciente del barrio.",
+    role: "Desarrollador y responsable del despliegue",
+    bullets: [
+      "Siete tratamientos explicados en lenguaje de paciente, no de ficha clínica.",
+      "Galería de antes y después con el contenido clínico desenfocado por defecto.",
+      "Sitio estático en Cloudflare Pages, con ubicación y cita por WhatsApp.",
+    ],
+    stack: ["Next.js", "Turbopack", "TypeScript", "Tailwind", "Cloudflare Pages"],
+    status: "produccion",
+    liveUrl: "https://od-jose-daconceicao.pages.dev/",
+    media: "odontologo",
+    alt: "Demo de la web del odontólogo Jose Cabaña, mostrando los tratamientos disponibles y la galería de resultados.",
+    pow: "¡FLASH!",
   },
   {
     id: "tesseract",
