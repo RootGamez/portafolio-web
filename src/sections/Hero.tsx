@@ -148,7 +148,11 @@ export function Hero() {
                   loading="eager"
                   decoding="sync"
                   fetchPriority="high"
-                  className="block h-full w-full object-cover object-top"
+                  /* El origen tiene aire de sobra sobre la cabeza. Con
+                     object-top el recorte conservaba ese hueco y se comia el
+                     pecho, dejando la cara alta y descolgada del cuerpo.
+                     Bajar el encuadre al 30% centra la cara con el torso. */
+                  className="block h-full w-full object-cover object-[50%_30%]"
                 />
               </picture>
             </BrushFrame>
