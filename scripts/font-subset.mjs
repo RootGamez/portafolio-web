@@ -72,13 +72,26 @@ if (process.argv[1]?.endsWith("font-subset.mjs")) {
 
   if (process.argv.includes("--write")) {
     const html = readFileSync("index.html", "utf-8");
-    const next = html.replace(/(family=Yuji\+Syuku&text=)[^&"]+/u, `$1${param}`);
-    if (next === html) {
+    const pattern = /(family=Yuji\+Syuku&text=)[^&"]+/u;
+
+    /*
+     * Se comprueba la COINCIDENCIA, no si el texto cambio. Un `next === html`
+     * significa las mas de las veces que el subset ya estaba al dia, no que
+     * falte el <link>: confundir ambos casos hacia fallar el comando cada vez
+     * que no habia nada que actualizar.
+     */
+    if (!pattern.test(html)) {
       console.error("No se encontro el <link> de Yuji Syuku con ?text= en index.html");
       process.exit(1);
     }
-    writeFileSync("index.html", next);
-    console.log(`index.html actualizado: ${glyphs.size} glifos`);
+
+    const next = html.replace(pattern, `$1${param}`);
+    if (next === html) {
+      console.log(`index.html ya estaba al dia: ${glyphs.size} glifos`);
+    } else {
+      writeFileSync("index.html", next);
+      console.log(`index.html actualizado: ${glyphs.size} glifos`);
+    }
   } else {
     console.log([...glyphs].sort().join(""));
     console.log(`\n${glyphs.size} glifos. Usa --write para escribir index.html.`);

@@ -32,13 +32,31 @@ export const STATUS_LABEL: Record<ProjectStatus, string> = {
  * una sola dejaba un proyecto fuera de ambas listas, o repetido en las dos,
  * sin que nada fallara.
  */
-export const featuredIds: readonly string[] = ["jaw-project", "adflow"];
+export const featuredIds: readonly string[] = ["taskflow", "adflow"];
 
 export function isFeatured(id: string): boolean {
   return featuredIds.includes(id);
 }
 
 export const projects: readonly Project[] = [
+  {
+    id: "taskflow",
+    title: "TaskFlow",
+    tagline:
+      "Espacio de trabajo para equipos: tablero kanban, sprints, wiki jerárquico y editor de bloques. Una alternativa seria a Notion y Linear, no una demo.",
+    role: "Desarrollador full stack",
+    bullets: [
+      "17 apps de Django y 23 módulos de producto: tickets, sprints, metas, relaciones entre tareas, plantillas y páginas.",
+      "Editor de bloques con TipTap — tablas, fórmulas, menciones y adjuntos — reutilizado por tickets y wiki.",
+      "Búsqueda global con paleta de comandos, atajos de teclado y 657 tests entre backend y frontend.",
+    ],
+    stack: ["Django REST", "PostgreSQL", "Celery", "Channels", "React", "TypeScript", "TipTap"],
+    status: "produccion",
+    liveUrl: "https://task.screeniadigital.com/",
+    media: "taskflow",
+    alt: "Demo de TaskFlow, espacio de trabajo para equipos, mostrando el tablero kanban con carriles por responsable y el detalle de un ticket.",
+    pow: "¡BAM!",
+  },
   {
     id: "adflow",
     title: "AdFlow — ScreenIA",
