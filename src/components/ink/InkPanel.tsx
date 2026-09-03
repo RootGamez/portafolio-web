@@ -55,12 +55,12 @@ export function InkPanel({
       />
       <span
         aria-hidden="true"
-        className="ink-edge absolute inset-0 border-koma border-[var(--g-structure)] bg-koma"
+        className="ink-edge absolute inset-0 border-[6px] border-[var(--g-structure)] bg-koma"
       />
       {tone && <Screentone kind={tone} fade={toneFade} />}
 
       {caption && (
-        <span className="absolute -left-1 -top-3 z-20 border-ink-thin border-[var(--g-structure)] bg-kin px-3 py-1 font-mono text-caption uppercase text-ink">
+        <span className="absolute -left-1 -top-3 z-20 border-[3px] border-[var(--g-structure)] bg-kin px-3 py-1 font-mono text-caption uppercase text-ink">
           {caption}
         </span>
       )}

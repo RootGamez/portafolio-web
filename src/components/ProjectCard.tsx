@@ -192,7 +192,7 @@ export function ProjectCard({
   const split = mediaSide !== "top";
 
   const media = project.media ? (
-    <div className={`relative border-ink-thin border-[var(--g-structure)] bg-ink ${MEDIA_RATIO}`}>
+    <div className={`relative border-[3px] border-[var(--g-structure)] bg-ink ${MEDIA_RATIO}`}>
       <video
         ref={videoRef}
         muted
@@ -213,7 +213,7 @@ export function ProjectCard({
     // vineta puede ser solo un SFX. Mantiene el MISMO aspect-ratio que los
     // videos para que el ritmo del grid no se rompa.
     <div
-      className={`relative grid place-items-center overflow-hidden border-ink-thin border-[var(--g-structure)] bg-koma ${MEDIA_RATIO}`}
+      className={`relative grid place-items-center overflow-hidden border-[3px] border-[var(--g-structure)] bg-koma ${MEDIA_RATIO}`}
     >
       <Screentone kind="coarse" />
       <Sfx rotate={-6} className="relative z-10">
@@ -311,7 +311,7 @@ export function ProjectCard({
       {/* Capa 2 — marco de tinta y fondo del koma. */}
       <span
         aria-hidden="true"
-        className="ink-edge absolute inset-0 border-koma border-[var(--g-structure)] bg-koma"
+        className="ink-edge absolute inset-0 border-[6px] border-[var(--g-structure)] bg-koma"
       />
       {/* Capa 3 — trama que se desvanece. Solo en las vinetas protagonistas:
           en las pequenas ensuciaria el texto sin aportar profundidad. */}

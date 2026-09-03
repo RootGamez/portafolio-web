@@ -37,7 +37,7 @@ const VARIANTS: Record<Variant, string> = {
 
 const BASE =
   "inline-flex min-h-12 cursor-pointer touch-manipulation items-center justify-center gap-2 " +
-  "border-ink border-[var(--g-structure)] px-5 py-3 " +
+  "border-[4px] border-[var(--g-structure)] px-5 py-3 " +
   "font-poster text-[18px] uppercase leading-none tracking-wide " +
   "shadow-ink-sm transition-[transform,box-shadow] duration-[140ms] ease-ink " +
   "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-md " +

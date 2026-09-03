@@ -15,19 +15,28 @@ export function InkFilters() {
       style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
     >
       <defs>
-        {/* Canto de pincel: rompe el borde recto para que tiemble como tinta. */}
+        {/*
+          Canto de pincel: rompe el borde recto para que tiemble como tinta.
+
+          Los parametros estan calibrados sobre un koma ancho y bajo, que es el
+          caso peor. Con baseFrequency baja el ruido tiene onda larga y el borde
+          no tiembla: DERIVA — sobre 1200px de ancho el trazo se va de sitio y
+          el grosor pasa de 2 a 12px, lo que se lee como un error de maquetacion
+          y no como tinta. Frecuencia mas alta y desplazamiento mas corto dan un
+          temblor de grano de papel, que es el efecto buscado.
+        */}
         <filter id="ink-rough" x="-6%" y="-6%" width="112%" height="112%">
           <feTurbulence
             type="fractalNoise"
-            baseFrequency="0.045"
-            numOctaves="3"
+            baseFrequency="0.11"
+            numOctaves="2"
             seed="7"
             result="noise"
           />
           <feDisplacementMap
             in="SourceGraphic"
             in2="noise"
-            scale="4"
+            scale="2.2"
             xChannelSelector="R"
             yChannelSelector="G"
           />

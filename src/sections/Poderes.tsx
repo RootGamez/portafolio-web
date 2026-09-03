@@ -76,7 +76,7 @@ export function Poderes() {
                 {group.items.map((item) => (
                   <li
                     key={item}
-                    className="border-ink-thin border-[var(--g-structure)] bg-washi-deep px-2.5 py-1 font-mono text-small leading-tight text-on-koma"
+                    className="border-[3px] border-[var(--g-structure)] bg-washi-deep px-2.5 py-1 font-mono text-small leading-tight text-on-koma"
                   >
                     {item}
                   </li>

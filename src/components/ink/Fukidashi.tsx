@@ -24,7 +24,7 @@ export function Fukidashi({ children, variant = "speech", className = "" }: Prop
   return (
     <div
       role="figure"
-      className={`relative max-w-[46ch] border-ink-thin border-[var(--g-structure)] bg-koma px-6 py-4 text-body-lg text-on-koma shadow-ink-sm ${shape} ${className}`}
+      className={`relative max-w-[46ch] border-[3px] border-[var(--g-structure)] bg-koma px-6 py-4 text-body-lg text-on-koma shadow-ink-sm ${shape} ${className}`}
     >
       {children}
     </div>

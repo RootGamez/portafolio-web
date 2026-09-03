@@ -338,16 +338,24 @@
   --color-on-koma-faint: var(--g-koma-faint);
 }
 
-/* Tailwind v4 no expone namespace --border-width-*: van como @utility. */
-@utility border-ink-thin {
-  border-width: 3px;
-}
-@utility border-ink {
-  border-width: 4px;
-}
-@utility border-koma {
-  border-width: 6px;
-}
+/* ============================================================
+   NO declarar aqui utilidades `border-*` de GROSOR.  —  no borrar
+
+   Aqui vivian `border-ink` (4px) y `border-koma` (6px). Colisionaban en
+   silencio con las utilidades de COLOR que Tailwind genera solo a partir de
+   `--color-ink` y `--color-koma` del @theme de arriba: se emitian dos reglas
+   con el mismo nombre, y la de color iba despues y ganaba.
+
+   El efecto era invisible en el codigo y muy visible en pantalla: cada koma
+   pintaba su borde en `--color-koma` (papel) en vez del `--g-structure`
+   (tinta) que pedia su clase, y sobre suelo claro el panel se quedaba sin
+   marco. El mismo choque afectaba a `border-ink`.
+
+   Los grosores van ahora como valor explicito en el sitio de uso
+   (`border-[3px]`, `border-[4px]`, `border-[6px]`), que no puede colisionar
+   con ningun color. Si vuelve a hacer falta un nombre semantico, que NO
+   empiece por `border-`.
+   ============================================================ */
 
 /* ============================================================
    BASE

@@ -31,7 +31,7 @@ export function SealBadge({ status }: Props) {
 
   return (
     <span
-      className={`inline-flex min-h-7 items-center gap-1.5 border-ink-thin border-ink px-3 py-1 font-mono text-caption uppercase tracking-wide ${STYLE[status]}`}
+      className={`inline-flex min-h-7 items-center gap-1.5 border-[3px] border-[4px] px-3 py-1 font-mono text-caption uppercase tracking-wide ${STYLE[status]}`}
     >
       <Icon size={14} strokeWidth={3} aria-hidden="true" />
       {STATUS_LABEL[status]}

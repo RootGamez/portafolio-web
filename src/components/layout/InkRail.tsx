@@ -34,7 +34,7 @@ export function InkRail() {
       {/* ---- Riel vertical (desktop) ---- */}
       <nav
         aria-label="Secciones"
-        className="fixed left-0 top-0 z-40 hidden h-dvh w-16 flex-col items-center justify-center gap-1 border-r-4 border-ink bg-washi lg:flex"
+        className="fixed left-0 top-0 z-40 hidden h-dvh w-16 flex-col items-center justify-center gap-1 border-r-4 border-[4px] bg-washi lg:flex"
       >
         <ul className="flex flex-col items-center gap-5">
           {NAV.map((section) => {
@@ -62,7 +62,7 @@ export function InkRail() {
       {/* ---- Barra superior (movil / tablet) ---- */}
       <nav
         aria-label="Secciones"
-        className="fixed inset-x-0 top-0 z-40 border-b-4 border-ink bg-washi lg:hidden"
+        className="fixed inset-x-0 top-0 z-40 border-b-4 border-[4px] bg-washi lg:hidden"
         style={{ height: "var(--nav-height)" }}
       >
         <div className="flex h-full items-center justify-between px-4">
@@ -77,7 +77,7 @@ export function InkRail() {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="menu-secciones"
-            className="flex h-11 w-11 cursor-pointer items-center justify-center border-ink-thin border-ink bg-kin text-ink"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center border-[3px] border-[4px] bg-kin text-ink"
           >
             <span className="sr-only">{open ? "Cerrar menu" : "Abrir menu"}</span>
             {open ? (
@@ -91,7 +91,7 @@ export function InkRail() {
         <ul
           id="menu-secciones"
           hidden={!open}
-          className="max-h-[70dvh] overflow-y-auto border-t-4 border-ink bg-washi"
+          className="max-h-[70dvh] overflow-y-auto border-t-4 border-[4px] bg-washi"
         >
           {NAV.map((section) => (
             <li key={section.slug} className="border-b-2 border-washi-edge">

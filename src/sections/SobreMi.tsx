@@ -53,8 +53,15 @@ export function SobreMi() {
             Decorativa y aria-hidden por dentro; se oculta en movil porque
             ahi no hay canalon donde ponerla sin robarle sitio al texto.
             Va envuelta: el `hidden` vive en el contenedor para no pelearse
-            con el `inline-flex` que Sfx trae de serie. */}
-        <div className="hidden md:col-span-4 md:col-start-9 md:row-start-1 md:flex md:items-center md:justify-end">
+            con el `inline-flex` que Sfx trae de serie.
+
+            Se alinea ARRIBA y lleva z-30 por un motivo concreto: centrada en
+            la fila caia justo donde el koma sube 2rem a solaparse, y como el
+            koma tiene z-10 lo tapaba por debajo. Arriba queda libre, y el
+            z-30 garantiza que si algun dia se rozan, el SFX reviente por
+            encima de la vineta — que es como se comporta en una plancha
+            impresa, nunca por detras. */}
+        <div className="hidden md:col-span-4 md:col-start-9 md:row-start-1 md:z-30 md:flex md:items-start md:justify-end md:pt-1">
           <Sfx kana="ドン" rotate={-8}>
             ¡POW!
           </Sfx>
