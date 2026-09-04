@@ -36,7 +36,7 @@ const ROTATE = [-1, 1, -2, 1, 2, -1] as const;
 const TONE = ["fine", false, "lines", "coarse", false, "fine"] as const satisfies readonly ToneKind[];
 
 /**
- * 06 · Mis poderes — suelo WASHI con screentone.
+ * 06 · Mis Habilidades — suelo WASHI con screentone.
  *
  * Los tags van sobre washi-300 dentro de un koma de washi-100: tinta sobre
  * papel hundido, 12.88:1. A 14px (text-small) y no a 12: son metadatos, pero

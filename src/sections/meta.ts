@@ -29,7 +29,7 @@ export const sectionsMeta: readonly SectionMeta[] = [
   { slug: "proyectos", title: "Mis proyectos", jp: "作品", numeral: "三", ground: "sumi", inNav: true },
   { slug: "mas-proyectos", title: "Más proyectos", jp: "其他", numeral: "四", ground: "washi", inNav: false },
   { slug: "produccion", title: "Del código a producción", jp: "実戦", numeral: "五", ground: "shu", inNav: true },
-  { slug: "poderes", title: "Mis poderes", jp: "技", numeral: "六", ground: "washi", inNav: true },
+  { slug: "poderes", title: "Mis Habilidades", jp: "技", numeral: "六", ground: "washi", inNav: true },
   { slug: "fuera-del-codigo", title: "Fuera del código", jp: "日常", numeral: "七", ground: "sumi", inNav: true },
   { slug: "contacto", title: "Hablemos", jp: "連絡", numeral: "八", ground: "kin", inNav: true },
   { slug: "fin", title: "Fin", jp: "終", numeral: "終", ground: "sumi", inNav: false },

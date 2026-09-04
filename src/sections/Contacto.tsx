@@ -56,8 +56,7 @@ export function Contacto() {
         <Reveal y={18} amount={0.4} duration={0.4}>
           <Fukidashi>
             <p className="font-body font-bold">
-              ¿Tienes un proyecto real, un equipo que necesita liderazgo técnico, o solo quieres
-              hablar de código?
+              ¿Tienes un proyecto en mente? ¿Quieres que te ayude a llevarlo a producción? Escríbeme y lo vemos.
             </p>
           </Fukidashi>
         </Reveal>

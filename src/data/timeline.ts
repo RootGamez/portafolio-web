@@ -15,7 +15,7 @@ export const timeline: readonly Milestone[] = [
     role: "Ingeniería de Software",
     period: "Feb 2024 – en curso",
     body: "Arranca la carrera de Ingeniería de Software. Base sólida en lógica, algoritmos y fundamentos — la que sostiene todo lo demás.",
-    badge: "5.º semestre",
+    badge: "6.º semestre",
     pow: "¡ZAS!",
   },
   {
