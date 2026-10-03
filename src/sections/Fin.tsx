@@ -6,6 +6,7 @@ import { InkButton } from "@/components/ink/InkButton";
 import { Section } from "@/components/layout/Section";
 import { Reveal } from "@/components/motion/Reveal";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useStageInView } from "@/hooks/useStageInView";
 import { EASE_INK, STAGGER } from "@/lib/motion";
 import { getSectionMeta } from "@/sections/meta";
 
@@ -33,6 +34,7 @@ const BUTTON_REVEAL = { y: 14, amount: 0.6, duration: 0.3 } as const;
  */
 export function Fin() {
   const reduced = usePrefersReducedMotion();
+  const { ref: sealRef, shown: sealShown } = useStageInView<HTMLSpanElement>(0.5);
 
   return (
     <Section
@@ -47,12 +49,14 @@ export function Fin() {
     >
       <div className="flex flex-col items-center gap-8 text-center">
         <motion.span
+          ref={sealRef}
           aria-hidden="true"
           className="flex size-28 shrink-0 select-none items-center justify-center bg-shu font-brush text-[4.5rem] leading-none text-washi-hi shadow-ink-md sm:size-36 sm:text-[6rem]"
           style={{ rotate: "-3deg" }}
           initial={reduced ? false : { opacity: 0, scale: 0.86 }}
-          whileInView={reduced ? undefined : { opacity: 1, scale: 1 }}
-          viewport={{ once: true, amount: 0.5 }}
+          animate={
+            reduced || sealShown ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.86 }
+          }
           transition={{ duration: 0.45, ease: EASE_INK }}
         >
           終

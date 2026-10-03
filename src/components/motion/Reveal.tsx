@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { motion } from "motion/react";
 import { EASE_INK } from "@/lib/motion";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useStageInView } from "@/hooks/useStageInView";
 
 /** Etiquetas que de verdad se usan como envoltorio de revelado. */
 type RevealTag = "div" | "li" | "span";
@@ -32,11 +33,14 @@ const TAG: Record<RevealTag, typeof motion.div> = {
  * no ejecuta la animacion, asi que un `initial={{ opacity: 0 }}` incondicional
  * dejaria el contenido en opacidad 0 PARA SIEMPRE: invisible, no solo quieto.
  * Es la trampa numero uno del proyecto (docs/DESIGN_SYSTEM.md §7, restriccion
- * 2). El patron correcto es `initial={reduced ? false : {...}}` — arrancar
- * VISIBLE y saltarse la animacion — y estaba escrito a mano en once sitios,
- * dependiendo de que cada autor se acordara. Aqui se escribe una vez.
+ * 2). El patron correcto es arrancar VISIBLE y saltarse la animacion, y estaba
+ * escrito a mano en once sitios, dependiendo de que cada autor se acordara.
+ * Aqui se escribe una vez.
  *
- * `once: true` en el viewport: el contenido no vuelve a desaparecer al subir.
+ * El disparo lo decide `useStageInView` y no `whileInView`: dentro de un
+ * escenario hay que pedir ademas que el escenario sea el activo, porque el
+ * `IntersectionObserver` da por visible hasta lo que esta en una capa oculta.
+ * Se revela una sola vez: el contenido no vuelve a desaparecer al subir.
  */
 export function Reveal({
   children,
@@ -48,14 +52,16 @@ export function Reveal({
   className = "",
 }: Props) {
   const reduced = usePrefersReducedMotion();
+  const { ref, shown } = useStageInView<HTMLDivElement>(amount);
   const Component = TAG[as];
+  const hidden = { opacity: 0, y };
 
   return (
     <Component
+      ref={ref}
       className={className}
-      initial={reduced ? false : { opacity: 0, y }}
-      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount }}
+      initial={reduced ? false : hidden}
+      animate={reduced || shown ? { opacity: 1, y: 0 } : hidden}
       transition={{ duration, ease: EASE_INK, delay }}
     >
       {children}

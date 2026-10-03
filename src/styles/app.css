@@ -382,12 +382,35 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Modo escenarios: un salto del riel o de un ancla tiene que llegar DIRECTO. Con
+   smooth recorreria, animado, todos los escenarios intermedios. StageDeck marca
+   html[data-deck="on"] mientras esta montado (docs/PLAN_ESCENARIOS.md §6). */
+html[data-deck="on"] {
+  scroll-behavior: auto;
+}
+
+/* Modo lineal: con la barra de nav fija arriba (<1024px) el navegador alinea el
+   elemento enfocado al borde de la ventana y lo dejaria tapado por la barra
+   (WCAG 2.4.11). En el deck no aplica: el visor ya empieza bajo la barra. */
+html:not([data-deck="on"]) {
+  scroll-padding-top: var(--nav-height);
+}
+
 /* Foco: anillo doble (tinta + halo). Sobrevive sobre papel, tinta, rojo y oro
    porque ambos colores los define el suelo. */
 :where(a, button, [role="button"], input, select, textarea, [tabindex]):focus-visible {
   outline: var(--focus-ring-width) solid var(--g-focus-ring);
   outline-offset: var(--focus-ring-offset);
   box-shadow: 0 0 0 var(--focus-halo-width) var(--g-focus-halo);
+}
+
+/* Contenedores que solo reciben foco por programa (tabindex -1): el visor del deck
+   y la seccion a la que se salta cuando no tiene titulo visible. Un anillo
+   alrededor de una pantalla entera no orienta a nadie: ahi manda el anunciador. */
+[data-stage-visor]:focus,
+section[tabindex="-1"]:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* ============================================================
@@ -410,6 +433,42 @@ html {
     transition-duration: 0.01ms !important;
   }
   .parallax {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   IMPRESION — el modo escenarios se aplana
+
+   Con el deck el documento es UNA pantalla sticky; impreso saldria una sola
+   hoja. Aqui se deshace el apilado: la pista pierde su alto, el visor deja de
+   ser sticky y cada escenario vuelve a ocupar su sitio en el flujo, visible y
+   sin desplazar. Los !important son necesarios: Motion escribe opacity,
+   visibility y transform como estilos en linea.
+   Ver docs/PLAN_ESCENARIOS.md §6.
+   ============================================================ */
+@media print {
+  [data-stage-track] {
+    height: auto !important;
+  }
+  [data-stage-visor] {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  [data-stage] {
+    position: static !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  [data-stage-content] {
+    transform: none !important;
+  }
+  /* Los reveals arrancan en opacity:0 como estilo en linea y solo se revelan al
+     entrar en vista: imprimir sin haber visitado un escenario lo dejaria en blanco. */
+  [data-stage-track] [style*="opacity"] {
+    opacity: 1 !important;
     transform: none !important;
   }
 }

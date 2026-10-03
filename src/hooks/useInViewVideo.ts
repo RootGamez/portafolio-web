@@ -43,6 +43,13 @@ export function useInViewVideo(
     );
 
     observer.observe(video);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Al desactivarse (p. ej. su escenario deja de ser el activo) el
+      // IntersectionObserver ya no avisara de la salida de pantalla, y con las
+      // capas apiladas el video sigue "en pantalla" aunque su capa este oculta:
+      // si estaba sonando, hay que pararlo aqui.
+      video.pause();
+    };
   }, [ref, enabled, reduced]);
 }

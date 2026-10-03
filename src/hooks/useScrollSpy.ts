@@ -10,9 +10,14 @@ import { useEffect, useState } from "react";
  *
  * `rootMargin` recorta la ventana a su banda central: asi la seccion activa
  * es la que ocupa el centro de la pantalla, no la que asoma por abajo.
+ *
+ * `initialId` es la seccion con la que arranca antes de que llegue la primera
+ * observacion. Por defecto la primera; al volver desde el modo escenarios se
+ * pasa la que el usuario estaba viendo, para que el riel no parpadee en la
+ * primera hasta que el observer conteste.
  */
-export function useScrollSpy(ids: readonly string[]): string {
-  const [active, setActive] = useState(ids[0] ?? "");
+export function useScrollSpy(ids: readonly string[], initialId: string = ids[0] ?? ""): string {
+  const [active, setActive] = useState(initialId);
 
   useEffect(() => {
     const nodes = ids

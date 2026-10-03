@@ -71,6 +71,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!--
+      LCP: la foto del hero es el elemento mas grande de la primera pantalla. Sin esta
+      precarga el navegador solo la descubre cuando ejecuta el bundle de JS (medido en
+      movil, CPU 4x y Fast 4G: 1062 ms de retraso de carga). `type` evita bajar el AVIF en
+      navegadores que no lo soportan: ahi <picture> elige el WebP. Misma URL que el
+      <source> de Hero.tsx; si cambia una, cambia la otra.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      href="/media/img/anthony.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+
+    <!--
       Anton es la unica critica: es el titulo del hero y por tanto el LCP.
       El resto entra con swap para no bloquear el primer render.
     -->

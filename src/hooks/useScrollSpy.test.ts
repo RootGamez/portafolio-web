@@ -39,6 +39,15 @@ describe("useScrollSpy", () => {
     expect(result.current).toBe("inicio");
   });
 
+  it("puede arrancar en otra seccion (al volver de otro modo el riel no debe parpadear en la primera)", () => {
+    mountSections(["inicio", "sobre-mi", "contacto"]);
+    const { result } = renderHook(() =>
+      useScrollSpy(["inicio", "sobre-mi", "contacto"], "contacto"),
+    );
+
+    expect(result.current).toBe("contacto");
+  });
+
   it("marca como activa la seccion que entra en la banda central", () => {
     mountSections(["inicio", "sobre-mi", "contacto"]);
     const { result } = renderHook(() =>

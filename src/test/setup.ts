@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { act, cleanup } from "@testing-library/react";
 
 afterEach(() => {
   cleanup();
@@ -40,23 +40,116 @@ function installMatchMedia() {
  */
 export const observerCallbacks: IntersectionObserverCallback[] = [];
 
+/** Todos los observers creados, para poder disparar el que observa un elemento concreto. */
+const observerInstances: MockIntersectionObserver[] = [];
+
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root = null;
   readonly rootMargin = "";
   readonly scrollMargin = "";
   readonly thresholds: readonly number[] = [];
 
+  /** Elementos que este observer tiene en observacion ahora mismo. */
+  readonly targets = new Set<Element>();
+  private readonly callback: IntersectionObserverCallback;
+
   constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
     observerCallbacks.push(callback);
+    observerInstances.push(this);
   }
 
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
+  observe = vi.fn((target: Element) => {
+    this.targets.add(target);
+  });
+  unobserve = vi.fn((target: Element) => {
+    this.targets.delete(target);
+  });
+  disconnect = vi.fn(() => {
+    this.targets.clear();
+  });
   takeRecords = vi.fn(() => []);
+
+  /** Solo para triggerIntersection. */
+  fire(entries: IntersectionObserverEntry[]) {
+    this.callback(entries, this);
+  }
 }
 
 vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+/**
+ * Dispara una interseccion sobre UN elemento, sin importar que observer lo
+ * tenga. Hace falta porque Motion cachea sus observers entre tests: el
+ * callback de `observerCallbacks.at(-1)` puede pertenecer a otro test y no al
+ * observer que de verdad observa este elemento.
+ */
+export function triggerIntersection(target: Element, isIntersecting: boolean): void {
+  const observer = [...observerInstances].reverse().find((candidate) => candidate.targets.has(target));
+  if (!observer) throw new Error("Ningun IntersectionObserver observa ese elemento");
+
+  const rect = target.getBoundingClientRect();
+  const entry = {
+    target,
+    isIntersecting,
+    intersectionRatio: isIntersecting ? 1 : 0,
+    time: 0,
+    boundingClientRect: rect,
+    intersectionRect: rect,
+    rootBounds: null,
+  } as IntersectionObserverEntry;
+
+  act(() => observer.fire([entry]));
+}
+
+/**
+ * jsdom tampoco trae ResizeObserver, y el modo escenarios mide con el. Este
+ * doble no mide nada (jsdom no tiene layout): un test fija las alturas
+ * simuladas y llama a `triggerResize()` para decir "el tamano cambio".
+ */
+const resizeObservers = new Set<MockResizeObserver>();
+
+class MockResizeObserver implements ResizeObserver {
+  private readonly callback: ResizeObserverCallback;
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+    resizeObservers.add(this);
+  }
+
+  /** Elementos que este observer tiene en observacion ahora mismo. */
+  readonly targets = new Set<Element>();
+
+  observe = vi.fn((target: Element) => {
+    this.targets.add(target);
+  });
+  unobserve = vi.fn((target: Element) => {
+    this.targets.delete(target);
+  });
+  disconnect = vi.fn(() => {
+    this.targets.clear();
+    resizeObservers.delete(this);
+  });
+
+  /** Solo para triggerResize. */
+  fire() {
+    this.callback([], this);
+  }
+}
+
+vi.stubGlobal("ResizeObserver", MockResizeObserver);
+
+/** Todos los elementos que algun ResizeObserver vivo esta observando. */
+export function elementsUnderResizeObservation(): Element[] {
+  return [...resizeObservers].flatMap((observer) => [...observer.targets]);
+}
+
+/** Avisa a todos los ResizeObserver vivos de que algo cambio de tamano. */
+export function triggerResize(): void {
+  act(() => {
+    resizeObservers.forEach((observer) => observer.fire());
+  });
+}
 installMatchMedia();
 
 /**

@@ -3,6 +3,7 @@ import { Screentone } from "@/components/ink/Screentone";
 import { VerticalKanji } from "@/components/ink/VerticalKanji";
 import { BrushStroke } from "@/components/ink/BrushStroke";
 import { BrushEdge, type EdgeVariant } from "@/components/ink/BrushEdge";
+import { useStage } from "@/components/stage/StageContext";
 import type { Ground } from "@/sections/meta";
 
 type Props = {
@@ -55,6 +56,11 @@ export function Section({
   className = "",
   innerClassName = "",
 }: Props) {
+  // En modo escenarios la frontera entre dos suelos la pinta la transicion de
+  // tinta; el canto estatico (que invade la seccion anterior) solo tiene
+  // sentido en el modo lineal.
+  const { mode } = useStage();
+
   return (
     <section
       id={id}
@@ -62,7 +68,9 @@ export function Section({
       aria-labelledby={`${id}-titulo`}
       className={`relative isolate bg-ground text-on-ground ${className}`}
     >
-      {edge && <BrushEdge variant={edge} mirror={edgeMirror} height={edgeHeight} />}
+      {edge && mode === "linear" && (
+        <BrushEdge variant={edge} mirror={edgeMirror} height={edgeHeight} />
+      )}
 
       {tone && <Screentone kind={tone} fade />}
 

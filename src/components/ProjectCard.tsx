@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { GithubIcon } from "@/components/icons/Brand";
 import { SealBadge } from "@/components/ink/SealBadge";
 import { Screentone } from "@/components/ink/Screentone";
 import { Sfx } from "@/components/ink/Sfx";
+import { useStage } from "@/components/stage/StageContext";
 import type { Project } from "@/data/projects";
 import { useInViewVideo } from "@/hooks/useInViewVideo";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -97,9 +98,31 @@ export function ProjectCard({
 
   const reduced = usePrefersReducedMotion();
 
+  // Modo escenarios (docs/PLAN_ESCENARIOS.md §6). Fuera de un deck (modo
+  // lineal) el contexto vale "activo y cerca", asi que nada de esto cambia.
+  const { isActive, isNear } = useStage();
+
+  // Los medios pesados no se piden hasta que el escenario esta cerca (activo o
+  // adyacente): con las capas apiladas los 7 videos y sus posters se bajaban
+  // todos al cargar. Una vez pedidos no se sueltan, para no volver a bajarlos.
+  const [loadMedia, setLoadMedia] = useState(isNear);
+  if (isNear && !loadMedia) setLoadMedia(true);
+
   // Camino tactil. El hook ya comprueba (hover: none), reduced-motion y el
-  // umbral de visibilidad; aqui solo se le dice si hay video que mirar.
-  useInViewVideo(videoRef, Boolean(project.media));
+  // umbral de visibilidad; aqui solo se le dice si hay video que mirar. Y solo
+  // el del escenario ACTIVO: el IntersectionObserver da por visible hasta lo
+  // que esta en una capa oculta.
+  useInViewVideo(videoRef, Boolean(project.media) && isActive);
+
+  // Si el escenario deja de ser el activo, el hover y el foco de esta tarjeta ya
+  // no cuentan (su capa pasa a inert y puede que nunca llegue el mouseleave):
+  // se olvidan y el video se para.
+  useEffect(() => {
+    if (isActive) return;
+    hovering.current = false;
+    focused.current = false;
+    videoRef.current?.pause();
+  }, [isActive]);
 
   // El rAF del tilt sobrevive al componente si nadie lo cancela: al desmontar
   // con un frame en vuelo, el callback escribiria sobre un nodo ya desechado.
@@ -199,13 +222,13 @@ export function ProjectCard({
         loop
         playsInline
         preload="metadata"
-        poster={`/media/poster/${project.media}.webp`}
+        poster={loadMedia ? `/media/poster/${project.media}.webp` : undefined}
         aria-label={project.alt}
         width={MEDIA_W}
         height={MEDIA_H}
         className="block h-full w-full object-cover"
       >
-        <source src={`/media/video/${project.media}.mp4`} type="video/mp4" />
+        {loadMedia && <source src={`/media/video/${project.media}.mp4`} type="video/mp4" />}
       </video>
     </div>
   ) : (

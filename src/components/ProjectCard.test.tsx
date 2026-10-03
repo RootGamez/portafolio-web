@@ -1,7 +1,10 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, fireEvent, screen } from "@testing-library/react";
+import { motionValue } from "motion/react";
 import { ProjectCard } from "./ProjectCard";
+import { StageContext, type StageContextValue } from "@/components/stage/StageContext";
 import type { Project } from "@/data/projects";
+import { triggerIntersection } from "@/test/setup";
 
 /**
  * El requisito que motivo el refactor: la demo tiene que arrancar con hover
@@ -126,5 +129,124 @@ describe("ProjectCard — reproduccion de la demo", () => {
 
     expect(video).toHaveAttribute("width", "1280");
     expect(video).toHaveAttribute("height", "620");
+  });
+});
+
+/**
+ * Modo escenarios (docs/PLAN_ESCENARIOS.md §6). Con las capas apiladas el
+ * IntersectionObserver da por "visibles" tambien las tarjetas de escenarios
+ * ocultos, y los 7 videos se pedirian todos al cargar. La tarjeta tiene que
+ * enterarse de si su escenario esta cerca y de si es el activo.
+ */
+function deckStage(patch: Partial<StageContextValue>): StageContextValue {
+  return {
+    mode: "deck",
+    index: 3,
+    isActive: true,
+    isNear: true,
+    progress: motionValue(0),
+    ...patch,
+  };
+}
+
+function renderInStage(stage: StageContextValue) {
+  const ui = (value: StageContextValue) => (
+    <StageContext value={value}>
+      <ProjectCard project={PROJECT} />
+    </StageContext>
+  );
+  const utils = render(ui(stage));
+  const video = utils.container.querySelector("video") as HTMLVideoElement;
+  const card = video.closest("article") as HTMLElement;
+  return {
+    ...utils,
+    video,
+    card,
+    update: (next: StageContextValue) => utils.rerender(ui(next)),
+  };
+}
+
+function setTouch() {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query.includes("hover: none"),
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
+}
+
+describe("ProjectCard — dentro de un escenario", () => {
+  beforeEach(() => {
+    setReducedMotion(false);
+    vi.clearAllMocks();
+  });
+
+  it("en un escenario lejano no pide ni el video ni el poster", () => {
+    const { video } = renderInStage(deckStage({ isActive: false, isNear: false }));
+
+    expect(video.querySelector("source")).toBeNull();
+    expect(video).not.toHaveAttribute("poster");
+  });
+
+  it("al acercarse el escenario carga el video y el poster", () => {
+    const { video, update } = renderInStage(deckStage({ isActive: false, isNear: false }));
+
+    update(deckStage({ isActive: false, isNear: true }));
+
+    expect(video.querySelector("source")).toHaveAttribute("src", "/media/video/demo.mp4");
+    expect(video).toHaveAttribute("poster", "/media/poster/demo.webp");
+  });
+
+  it("una vez cargado no lo descarta al alejarse (evita volver a pedirlo)", () => {
+    const { video, update } = renderInStage(deckStage({ isActive: false, isNear: true }));
+
+    update(deckStage({ isActive: false, isNear: false }));
+
+    expect(video.querySelector("source")).not.toBeNull();
+  });
+
+  it("al dejar de ser el escenario activo pausa el video aunque el raton siga encima", () => {
+    const { video, card, update } = renderInStage(deckStage({ isActive: true }));
+    fireEvent.mouseEnter(card);
+    expect(video.play).toHaveBeenCalled();
+
+    update(deckStage({ isActive: false }));
+
+    expect(video.pause).toHaveBeenCalled();
+  });
+
+  it("tras reactivarse, un hover que ya no existe no vuelve a reproducir por su cuenta", () => {
+    const { video, card, update } = renderInStage(deckStage({ isActive: true }));
+    fireEvent.mouseEnter(card);
+    update(deckStage({ isActive: false }));
+    vi.clearAllMocks();
+
+    update(deckStage({ isActive: true }));
+
+    expect(video.play).not.toHaveBeenCalled();
+  });
+
+  it("en tactil reproduce al entrar en pantalla SOLO si su escenario es el activo", () => {
+    setTouch();
+    const active = renderInStage(deckStage({ isActive: true }));
+    triggerIntersection(active.video, true);
+    expect(active.video.play).toHaveBeenCalled();
+    active.unmount();
+    vi.clearAllMocks();
+
+    const inactive = renderInStage(deckStage({ isActive: false }));
+    // Si el escenario esta inactivo el hook ni siquiera observa el video: no hay
+    // nada que disparar. Se intenta igualmente, como haria el navegador.
+    try {
+      triggerIntersection(inactive.video, true);
+    } catch {
+      // Nadie observa el elemento: es justo lo esperado.
+    }
+
+    expect(inactive.video.play).not.toHaveBeenCalled();
   });
 });

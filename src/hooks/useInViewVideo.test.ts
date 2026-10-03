@@ -55,6 +55,23 @@ describe("useInViewVideo", () => {
     expect(ref.current.play).toHaveBeenCalled();
   });
 
+  it("al desactivarse (su escenario deja de ser el activo) pausa el video que estaba sonando", () => {
+    // Con escenarios apilados el IntersectionObserver sigue viendo el video como
+    // "en pantalla" aunque su capa ya este oculta: sin esto seguiria
+    // reproduciendose fuera de vista, gastando bateria y datos.
+    setMedia({ touch: true });
+    const ref = videoRef();
+    const { rerender } = renderHook(({ enabled }) => useInViewVideo(ref, enabled), {
+      initialProps: { enabled: true },
+    });
+    intersect(true);
+    expect(ref.current.play).toHaveBeenCalled();
+
+    rerender({ enabled: false });
+
+    expect(ref.current.pause).toHaveBeenCalled();
+  });
+
   it("en tactil pausa el video al salir de pantalla", () => {
     setMedia({ touch: true });
     const ref = videoRef();

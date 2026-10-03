@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useStageInView } from "@/hooks/useStageInView";
 import { EASE_INK } from "@/lib/motion";
 
 type Props = {
@@ -32,6 +33,8 @@ export function BrushStroke({
   delay = 0,
 }: Props) {
   const reduced = usePrefersReducedMotion();
+  // Se dibuja al entrar en vista Y con su escenario activo (ver useStageInView).
+  const { ref, shown } = useStageInView<SVGPathElement>(0.6);
 
   return (
     <svg
@@ -42,12 +45,12 @@ export function BrushStroke({
       className={className}
     >
       <motion.path
+        ref={ref}
         d={d}
         className="brush-path"
         strokeWidth={strokeWidth}
         initial={reduced ? false : { pathLength: 0 }}
-        whileInView={reduced ? undefined : { pathLength: 1 }}
-        viewport={{ once: true, amount: 0.6 }}
+        animate={{ pathLength: reduced || shown ? 1 : 0 }}
         transition={{ duration: 0.6, ease: EASE_INK, delay }}
       />
     </svg>

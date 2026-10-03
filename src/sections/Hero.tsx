@@ -126,9 +126,12 @@ export function Hero() {
               El enso va ANTES en el DOM para pintar debajo sin z-index
               negativos, que se comportan mal dentro del stacking context que
               crea la seccion. */}
+          {/* Aqui NO se anima la opacidad: esta foto es el LCP y Chrome ignora para
+              el LCP un elemento con opacity 0, asi que el fade retrasaba la metrica
+              (medido: 1403 ms de retraso de render en movil). Solo escala. */}
           <motion.div
-            initial={reduced ? false : { opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={reduced ? false : { scale: 0.97 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_INK, delay: 0.1 }}
             className="relative md:col-span-5 md:col-start-8"
           >
