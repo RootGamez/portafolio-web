@@ -3,6 +3,7 @@ import type { MotionValue } from "motion/react";
 import { FOCUS_RETRY_FRAMES } from "@/lib/stage/config";
 import {
   isPlainPrimaryClick,
+  needsCurtain,
   stageIndexFromAnchor,
   stageIndexFromHash,
 } from "@/lib/stage/navigation";
@@ -18,11 +19,22 @@ type Options = {
   readonly active: number;
   /** Envoltorio del contenido de un escenario (para localizar su titulo). */
   readonly getContent: (index: number) => HTMLElement | null;
+  /** Abre la cortina de tinta y llama a su argumento cuando la pantalla ya esta tapada. */
+  readonly runCurtain: (onCovered: () => void) => void;
+  /** Cancela el salto que espera a la cortina: un salto directo posterior manda. */
+  readonly cancelCurtain: () => void;
+};
+
+export type TeleportOptions = {
+  /** Da el foco al titulo del escenario al llegar (por defecto, si). */
+  readonly focus?: boolean;
+  /** Tapa el salto con la cortina de tinta (por defecto, no): solo los saltos que pide el usuario. */
+  readonly curtain?: boolean;
 };
 
 export type StageNavigation = {
   /** Lleva el scroll al inicio de un escenario y, por defecto, le da el foco. */
-  readonly teleportTo: (index: number, options?: { readonly focus?: boolean }) => void;
+  readonly teleportTo: (index: number, options?: TeleportOptions) => void;
   /** Coloca la pista segun `location.hash`. Para llamar una vez, al abrir la pagina. */
   readonly applyInitialHash: () => void;
 };
@@ -62,6 +74,11 @@ function findFocusTarget(root: HTMLElement | null): HTMLElement | null {
  * que esperar a que el escenario sea el activo, porque hasta entonces su capa
  * va `inert` y no admite foco; por eso es un "foco pendiente" que se cumple en
  * cuanto `active` coincide.
+ *
+ * Los clics en el riel o en un ancla se tapan con una cortina de tinta
+ * (`runCurtain`): el scroll se mueve cuando la pantalla ya esta cubierta. Son
+ * directos el salto inicial (hash al abrir, volver desde el modo lineal: no hay nada
+ * que tapar) y Atras/Adelante (el navegador ya movio el scroll antes de avisar).
  */
 export function useStageNavigation({
   slugs,
@@ -70,6 +87,8 @@ export function useStageNavigation({
   scrollY,
   active,
   getContent,
+  runCurtain,
+  cancelCurtain,
 }: Options): StageNavigation {
   const activeRef = useRef(active);
   const pendingFocus = useRef<number | null>(null);
@@ -105,8 +124,8 @@ export function useStageNavigation({
     focusFrame.current = requestAnimationFrame(() => attempt(FOCUS_RETRY_FRAMES));
   }, [getContent]);
 
-  const teleportTo = useCallback<StageNavigation["teleportTo"]>(
-    (index, { focus = true } = {}) => {
+  const jumpNow = useCallback(
+    (index: number, focus: boolean) => {
       // `behavior: "auto"` y no "instant": Safari antiguo rechaza "instant", y
       // con `html[data-deck] { scroll-behavior: auto }` "auto" ya es instantaneo.
       window.scrollTo({ top: origin.get() + offsetOfStage(layout.get(), index), behavior: "auto" });
@@ -138,6 +157,20 @@ export function useStageNavigation({
     [layout, origin, scrollY, focusPending],
   );
 
+  const teleportTo = useCallback<StageNavigation["teleportTo"]>(
+    (index, { focus = true, curtain = false } = {}) => {
+      const destination = origin.get() + offsetOfStage(layout.get(), index);
+      if (curtain && needsCurtain(window.scrollY, destination)) {
+        runCurtain(() => jumpNow(index, focus));
+        return;
+      }
+      // Lo ultimo que pide el usuario manda: un salto directo anula uno que espera.
+      cancelCurtain();
+      jumpNow(index, focus);
+    },
+    [layout, origin, runCurtain, cancelCurtain, jumpNow],
+  );
+
   useEffect(() => {
     activeRef.current = active;
     focusPending();
@@ -158,10 +191,12 @@ export function useStageNavigation({
       // el hash ya sea ese.
       const href = anchor.getAttribute("href") ?? "";
       if (window.location.hash !== href) window.history.pushState(null, "", href);
-      teleportTo(index);
+      teleportTo(index, { curtain: true });
     };
 
-    // Atras/adelante o editar el hash a mano.
+    // Atras/adelante o editar el hash a mano. SIN cortina: con Atras/Adelante el
+    // navegador ya repuso el scroll de esa entrada antes de avisar, asi que el salto
+    // ya se vio y taparlo despues solo anade un segundo corte.
     const onHashChange = () => {
       const index = stageIndexFromHash(window.location.hash, slugs);
       if (index !== -1) teleportTo(index);

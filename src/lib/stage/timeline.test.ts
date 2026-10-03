@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   activeIndex,
   buildLayout,
-  crossfadeOpacity,
+  layerOpacity,
   EMPTY_LAYOUT,
   locate,
   offsetOfStage,
@@ -10,6 +10,7 @@ import {
   scrollForPan,
   smoothstep,
   stageProgress,
+  transitionProgress,
   type StageSpec,
 } from "./timeline";
 import { CARD_END, COVER_END, SWAP_AT } from "./config";
@@ -305,6 +306,48 @@ describe("stageProgress", () => {
   });
 });
 
+describe("transitionProgress", () => {
+  // T0 va de 480 a 1280 (800 px) y T1 de 2360 a 3160.
+  it("vale 0 al empezar la transicion y 1 al acabarla, y la fraccion dentro", () => {
+    expect(transitionProgress(layout, 0, 480)).toBe(0);
+    expect(transitionProgress(layout, 0, 480 + 200)).toBe(0.25);
+    expect(transitionProgress(layout, 0, 880)).toBe(0.5);
+    expect(transitionProgress(layout, 0, 1280)).toBe(1);
+  });
+
+  it("antes de la transicion vale 0 y despues vale 1 (nunca se sale de 0..1)", () => {
+    expect(transitionProgress(layout, 1, 100)).toBe(0);
+    expect(transitionProgress(layout, 1, 3640)).toBe(1);
+    expect(transitionProgress(layout, 0, -50)).toBe(0);
+  });
+
+  it("cada transicion lee su propio tramo", () => {
+    expect(transitionProgress(layout, 1, 2360 + 400)).toBe(0.5);
+    expect(transitionProgress(layout, 0, 2360 + 400)).toBe(1);
+  });
+
+  it("un indice sin transicion (el del ultimo escenario, o fuera de rango) devuelve 0", () => {
+    expect(transitionProgress(layout, 2, 3000)).toBe(0);
+    expect(transitionProgress(layout, 9, 1000)).toBe(0);
+    expect(transitionProgress(layout, -1, 1000)).toBe(0);
+  });
+
+  it("con un layout vacio o un scroll no finito devuelve 0, nunca NaN", () => {
+    expect(transitionProgress(EMPTY_LAYOUT, 0, 100)).toBe(0);
+    expect(transitionProgress(layout, 0, Number.NaN)).toBe(0);
+  });
+
+  it("coincide con el `t` que da locate dentro de la transicion", () => {
+    for (const scroll of [500, 700, 880, 1100, 1279]) {
+      const position = locate(layout, scroll);
+      expect(position.kind).toBe("transition");
+      if (position.kind === "transition") {
+        expect(transitionProgress(layout, position.from, scroll)).toBeCloseTo(position.t, 10);
+      }
+    }
+  });
+});
+
 describe("smoothstep", () => {
   it("satura en los extremos y vale 0.5 en el centro", () => {
     expect(smoothstep(0, 1, -1)).toBe(0);
@@ -318,33 +361,43 @@ describe("smoothstep", () => {
   });
 });
 
-describe("crossfadeOpacity", () => {
+describe("layerOpacity: una sola capa se ve y el cambio ocurre en SWAP_AT (oculto tras la tinta)", () => {
+  // T0 va de 480 a 1280 (800 px): SWAP_AT cae en 480 + 800 * SWAP_AT.
+  const swapScroll = 480 + 800 * SWAP_AT;
+
   it("es 1 dentro de su propio escenario y 0 lejos de el", () => {
-    expect(crossfadeOpacity(layout, 0, 100)).toBe(1);
-    expect(crossfadeOpacity(layout, 1, 1500)).toBe(1);
-    expect(crossfadeOpacity(layout, 2, 100)).toBe(0);
-    expect(crossfadeOpacity(layout, 0, 3000)).toBe(0);
+    expect(layerOpacity(layout, 0, 100)).toBe(1);
+    expect(layerOpacity(layout, 1, 1500)).toBe(1);
+    expect(layerOpacity(layout, 2, 100)).toBe(0);
+    expect(layerOpacity(layout, 0, 3000)).toBe(0);
   });
 
-  it("durante una transicion la saliente y la entrante suman siempre 1", () => {
-    for (let s = 480; s <= 1280; s += 11) {
-      const sum = crossfadeOpacity(layout, 0, s) + crossfadeOpacity(layout, 1, s);
-      expect(sum).toBeCloseTo(1, 10);
+  it("durante una transicion se ve la SALIENTE hasta SWAP_AT y la ENTRANTE desde SWAP_AT", () => {
+    expect([layerOpacity(layout, 0, swapScroll - 1), layerOpacity(layout, 1, swapScroll - 1)]).toEqual([1, 0]);
+    expect([layerOpacity(layout, 0, swapScroll), layerOpacity(layout, 1, swapScroll)]).toEqual([0, 1]);
+  });
+
+  it("en cualquier punto del scroll hay EXACTAMENTE una capa visible: nunca dos, nunca ninguna", () => {
+    for (let s = 0; s <= 3640; s += 7) {
+      const visible = [0, 1, 2].filter((index) => layerOpacity(layout, index, s) === 1);
+      expect(visible, `scroll ${s}`).toHaveLength(1);
     }
   });
 
   it("los extremos de la transicion son continuos con los escenarios", () => {
-    expect(crossfadeOpacity(layout, 0, 480)).toBe(1);
-    expect(crossfadeOpacity(layout, 1, 480)).toBe(0);
-    expect(crossfadeOpacity(layout, 0, 1280)).toBe(0);
-    expect(crossfadeOpacity(layout, 1, 1280)).toBe(1);
+    expect(layerOpacity(layout, 0, 480)).toBe(1);
+    expect(layerOpacity(layout, 1, 480)).toBe(0);
+    expect(layerOpacity(layout, 0, 1280)).toBe(0);
+    expect(layerOpacity(layout, 1, 1280)).toBe(1);
   });
 
   it("un tercer escenario no participa en una transicion ajena", () => {
-    expect(crossfadeOpacity(layout, 2, 880)).toBe(0);
+    expect(layerOpacity(layout, 2, 880)).toBe(0);
   });
 
-  it("un indice inexistente devuelve 0", () => {
-    expect(crossfadeOpacity(layout, 7, 100)).toBe(0);
+  it("un indice inexistente, un layout vacio o un scroll no finito devuelven 0 o una capa valida, nunca NaN", () => {
+    expect(layerOpacity(layout, 7, 100)).toBe(0);
+    expect(layerOpacity(EMPTY_LAYOUT, 0, 100)).toBe(0);
+    expect(layerOpacity(layout, 0, Number.NaN)).toBe(1);
   });
 });

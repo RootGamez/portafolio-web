@@ -11,6 +11,7 @@ import { useMotionValue, useMotionValueEvent, useTransform } from "motion/react"
 import { useWindowScrollY } from "@/hooks/useWindowScrollY";
 import { NEAR_RANGE, REANCHOR_TOLERANCE_PX } from "@/lib/stage/config";
 import { revealDelta } from "@/lib/stage/reveal";
+import { TRANSITIONS } from "@/lib/stage/transitions";
 import {
   activeIndex as activeIndexOf,
   buildLayout,
@@ -22,7 +23,9 @@ import {
 } from "@/lib/stage/timeline";
 import type { Ground } from "@/sections/meta";
 import { useDeck } from "./DeckContext";
+import { InkOverlay } from "./InkOverlay";
 import { StageLayer } from "./StageLayer";
+import { useJumpCurtain } from "./useJumpCurtain";
 import { useStageNavigation } from "./useStageNavigation";
 
 export type StageDef = {
@@ -94,6 +97,8 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
   const scrollOffset = useTransform(() => scrollY.get() - origin.get());
 
   const [trackHeight, setTrackHeight] = useState(0);
+  // Alto medido del visor: dimensiona las bandas de tinta (cambia solo al redimensionar).
+  const [visorHeight, setVisorHeight] = useState(0);
   // Si se llega desde el modo lineal se arranca YA en ese escenario: escribir un 0
   // inicial en el estado compartido haria perder el sitio (ver useRestoreIndex).
   const [active, setActive] = useState(restoreIndex ?? 0);
@@ -132,6 +137,7 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
     const largeViewport = lvhProbeRef.current?.offsetHeight ?? 0;
     const dynamicBarSlack = Math.max(0, largeViewport - (visor.clientHeight + stickyTop));
     setTrackHeight(next.trackHeight + dynamicBarSlack);
+    setVisorHeight(visor.clientHeight);
 
     if (anchoredStart) {
       anchor.current = anchoredStart;
@@ -222,9 +228,21 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
     [layout, origin, scrollY],
   );
 
+  // La transicion i une el escenario i con el i+1: una menos que escenarios.
+  const inkTransitions = useMemo(() => TRANSITIONS.slice(0, Math.max(0, count - 1)), [count]);
   const slugs = useMemo(() => stages.map((stage) => stage.slug), [stages]);
   const getContent = useCallback((index: number) => contentRefs.current[index] ?? null, []);
-  const navigation = useStageNavigation({ slugs, layout, origin, scrollY, active, getContent });
+  const jump = useJumpCurtain();
+  const navigation = useStageNavigation({
+    slugs,
+    layout,
+    origin,
+    scrollY,
+    active,
+    getContent,
+    runCurtain: jump.run,
+    cancelCurtain: jump.cancel,
+  });
 
   // Posicion inicial (escenario a restaurar o, si no, hash de la URL): hay que
   // esperar a que la pista tenga ALTO (el primer render la deja en 0 hasta
@@ -287,6 +305,13 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
             {stage.node}
           </StageLayer>
         ))}
+        <InkOverlay
+          transitions={inkTransitions}
+          layout={layout}
+          scrollOffset={scrollOffset}
+          curtain={jump.curtain}
+          visorHeight={visorHeight}
+        />
       </div>
     </div>
   );

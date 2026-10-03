@@ -1,9 +1,5 @@
-import {
-  EDGES,
-  EDGE_VIEWBOX_HEIGHT,
-  EDGE_VIEWBOX_WIDTH,
-  type EdgeVariant,
-} from "./edgeShapes";
+import { EdgeMass } from "./EdgeMass";
+import { EDGE_VIEWBOX_HEIGHT, EDGE_VIEWBOX_WIDTH, type EdgeVariant } from "./edgeShapes";
 
 /** Se reexporta: Section y las secciones lo importan de aqui desde siempre. */
 export type { EdgeVariant };
@@ -34,7 +30,6 @@ type Props = {
  * Decorativo -> aria-hidden. La frontera no aporta informacion.
  */
 export function BrushEdge({ variant, mirror = false, height = 84 }: Props) {
-  const edge = EDGES[variant];
   const transform = mirror
     ? `scale(-1,1) translate(-${EDGE_VIEWBOX_WIDTH},0)`
     : undefined;
@@ -48,9 +43,9 @@ export function BrushEdge({ variant, mirror = false, height = 84 }: Props) {
       className="pointer-events-none absolute inset-x-0 top-0 w-full"
       style={{ height, transform: `translateY(-${height - 1}px)` }}
     >
-      <g transform={transform}>
-        {variant === "rule" ? (
-          /* Trazo fino de tinta, no masa de color: el suelo no cambia. */
+      {variant === "rule" ? (
+        /* Trazo fino de tinta, no masa de color: el suelo no cambia. */
+        <g transform={transform}>
           <path
             d="M40,58 C 260,34 420,70 660,50 C 900,30 1080,66 1400,44"
             fill="none"
@@ -60,15 +55,10 @@ export function BrushEdge({ variant, mirror = false, height = 84 }: Props) {
             opacity="0.5"
             vectorEffect="non-scaling-stroke"
           />
-        ) : (
-          <>
-            <path d={edge.d} fill="var(--g-bg)" />
-            {edge.flecks.map(([cx, cy, rx, ry]) => (
-              <ellipse key={`${cx}-${cy}`} cx={cx} cy={cy} rx={rx} ry={ry} fill="var(--g-bg)" />
-            ))}
-          </>
-        )}
-      </g>
+        </g>
+      ) : (
+        <EdgeMass variant={variant} mirror={mirror} />
+      )}
     </svg>
   );
 }

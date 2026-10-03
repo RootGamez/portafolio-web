@@ -1,8 +1,6 @@
 import {
   CARD_END,
   COVER_END,
-  CROSSFADE_END,
-  CROSSFADE_START,
   DEFAULT_INTRO_SCREENS,
   SWAP_AT,
   TRANSITION_SCREENS,
@@ -247,27 +245,25 @@ export function stageProgress(layout: Layout, index: number, scroll: number): nu
 }
 
 /**
- * Opacidad provisional de la capa de un escenario (T1-lite, fase 1): 1 en su
- * tramo y un crossfade simetrico en las transiciones vecinas. La saliente y la
- * entrante suman siempre 1. Cuando llegue la tinta (fase 2) esto pasa a ser un
- * cambio duro en SWAP_AT, oculto tras ella.
+ * Avance 0..1 de la transicion que sale del escenario `index` (la que lo une con
+ * el siguiente): 0 antes de empezar, 1 al acabar. 0 si ese indice no tiene
+ * transicion. Es el `t` de `locate`, pero para UNA transicion concreta aunque no
+ * sea la que esta en curso: cada banda de tinta lee la suya.
  */
-export function crossfadeOpacity(layout: Layout, index: number, scroll: number): number {
-  const stage: StageSegment | undefined = layout.stages[index];
-  if (!stage) return 0;
+export function transitionProgress(layout: Layout, index: number, scroll: number): number {
+  const transition: TransitionSegment | undefined = layout.transitions[index];
+  if (!transition) return 0;
+  return clamp((finiteOr(scroll, 0) - transition.start) / transition.length, 0, 1);
+}
 
-  const s = clamp(finiteOr(scroll, 0), 0, layout.totalLength);
-  if (s >= stage.start && s <= stage.end) return 1;
-
-  const incoming: TransitionSegment | undefined = layout.transitions[index - 1];
-  if (incoming && s >= incoming.start && s < incoming.end) {
-    return smoothstep(CROSSFADE_START, CROSSFADE_END, (s - incoming.start) / incoming.length);
-  }
-
-  const outgoing: TransitionSegment | undefined = layout.transitions[index];
-  if (outgoing && s > outgoing.start && s <= outgoing.end) {
-    return 1 - smoothstep(CROSSFADE_START, CROSSFADE_END, (s - outgoing.start) / outgoing.length);
-  }
-
-  return 0;
+/**
+ * Opacidad de la capa de un escenario: 1 si es el ACTIVO y 0 si no. Una sola capa
+ * se ve en cada punto del scroll; durante una transicion la saliente se ve hasta
+ * SWAP_AT y la entrante desde ahi. El cambio es duro porque queda tapado por la
+ * tinta (que lo cubre todo entre COVER_END y CARD_END), y asi el cambio visual y
+ * el de estado (`activeIndex`: riel, `inert`, lector de pantalla) son el MISMO.
+ */
+export function layerOpacity(layout: Layout, index: number, scroll: number): 0 | 1 {
+  if (!layout.stages[index]) return 0;
+  return activeIndex(locate(layout, scroll)) === index ? 1 : 0;
 }

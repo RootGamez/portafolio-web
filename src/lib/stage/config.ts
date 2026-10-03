@@ -25,12 +25,34 @@ export const CARD_END = 0.55;
 export const SWAP_AT = 0.5;
 
 /**
- * Ventana del crossfade provisional (fase 1, antes de que exista la tinta).
- * Simetrica alrededor de SWAP_AT para que la opacidad saliente y la entrante
- * sumen siempre 1.
+ * La tinta de una transicion es una banda con un borde de pincel delante y otro
+ * detras. Cada borde mide un 22 % del alto del visor, entre 96 y 240 px: bastante
+ * para que se lea como pincelada y no tanto como para comerse la pantalla.
  */
-export const CROSSFADE_START = 0.3;
-export const CROSSFADE_END = 0.7;
+export const INK_EDGE_RATIO = 0.22;
+export const INK_EDGE_MIN_PX = 96;
+export const INK_EDGE_MAX_PX = 240;
+
+/**
+ * Tarjeta de capitulo (numeral + titulo) sobre la tinta. La ventana sale de la
+ * PRUEBA DE "PARAR A MITAD" (ink.test.ts): la tarjeta mide ~356 px (semialtura
+ * ~180) y solo puede verse cuando la tinta SOLIDA ya la cubre entera. En un visor
+ * de 560-900 px eso ocurre hacia t~0,37 (y la cola la deja a t~0,63), asi que el
+ * fundido va de 0,32 a 0,42 y de 0,58 a 0,68: simetrico alrededor de SWAP_AT y del
+ * todo opaco durante la fase de tarjeta (COVER_END..CARD_END). El subrayado de
+ * pincel se dibuja de CARD_STROKE_START a SWAP_AT.
+ */
+export const CARD_SHOW_START = 0.32;
+export const CARD_SHOW_FULL = 0.42;
+export const CARD_HIDE_START = 0.58;
+export const CARD_HIDE_END = 0.68;
+export const CARD_STROKE_START = 0.38;
+
+/**
+ * Longitud minima (fraccion del trazo) para pintar el subrayado: por debajo, una
+ * raya casi nula con puntas redondas dibuja solo dos puntos en los extremos.
+ */
+export const CARD_STROKE_MIN_VISIBLE = 0.02;
 
 /**
  * Cuantos escenarios a cada lado del activo cuentan como "cercanos": ahi se
@@ -63,6 +85,18 @@ export const FOCUS_MARGIN_PX = 24;
  * medir: por debajo es ruido de redondeo y mover la ventana solo la haria temblar.
  */
 export const REANCHOR_TOLERANCE_PX = 1;
+
+/**
+ * Cortina de tinta de un salto (clic en el riel, ancla, atras/adelante): dura
+ * JUMP_CURTAIN_MS, cubre la pantalla y es entonces cuando se hace el salto; no
+ * bloquea nada (pointer-events: none) y un salto nuevo la reutiliza. No se abre
+ * para un salto de menos de CURTAIN_MIN_DISTANCE_PX: no habria nada que tapar.
+ */
+export const JUMP_CURTAIN_MS = 420;
+
+/** Punto de la cortina (0..1) en que la pantalla ya esta cubierta y se hace el salto. */
+export const JUMP_SWAP_AT = 0.5;
+export const CURTAIN_MIN_DISTANCE_PX = 1;
 
 /** Clave de localStorage del opt-out ("Modo simple"). Vale MOTION_OFF_VALUE si lo desactivo. */
 export const MOTION_STORAGE_KEY = "portafolio:motion";

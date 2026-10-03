@@ -465,6 +465,10 @@ section[tabindex="-1"]:focus {
   [data-stage-content] {
     transform: none !important;
   }
+  /* La tinta de las transiciones es una animacion de scroll: en papel no pinta nada. */
+  [data-ink-overlay] {
+    display: none !important;
+  }
   /* Los reveals arrancan en opacity:0 como estilo en linea y solo se revelan al
      entrar en vista: imprimir sin haber visitado un escenario lo dejaria en blanco. */
   [data-stage-track] [style*="opacity"] {

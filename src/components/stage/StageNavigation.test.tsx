@@ -4,6 +4,17 @@ import { DeckProvider, useDeck } from "./DeckContext";
 import { StageDeck } from "./StageDeck";
 import { HEIGHTS, Scene, STAGES, stubStageGeometry } from "@/test/stageGeometry";
 
+// La cortina real dura 420 ms; aqui lo justo para que corra por frames. Es un getter para
+// que un test pueda alargarla (con 40 ms, una maquina cargada puede saltarse todos los
+// fotogramas intermedios y el test que mira la banda seria una carrera).
+const curtain = vi.hoisted(() => ({ ms: 40 }));
+vi.mock("@/lib/stage/config", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/stage/config")>()),
+  get JUMP_CURTAIN_MS() {
+    return curtain.ms;
+  },
+}));
+
 function ActiveProbe() {
   return <output data-testid="activo">{useDeck().activeIndex}</output>;
 }
@@ -20,6 +31,7 @@ function renderWithLinks() {
       <nav>
         <a href="#uno">ir a uno</a>
         <a href="#dos">ir a dos</a>
+        <a href="#tres">ir a tres</a>
         <a href="#contenido">saltar</a>
         <a href="https://example.com" target="_blank" rel="noreferrer">
           externo
@@ -50,17 +62,122 @@ describe("navegacion del modo escenarios", () => {
   });
 
   afterEach(() => {
+    curtain.ms = 40;
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
     window.history.replaceState(null, "", "/");
   });
 
-  it("un clic en un ancla interna lleva la pista al inicio de ese escenario", () => {
+  describe("cortina de tinta al saltar", () => {
+    const curtainBand = () => document.querySelector('[data-ink-band="jump"]') as HTMLElement;
+
+    it("un clic NO salta al instante: espera a que la tinta cubra, y entonces salta", async () => {
+      renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a dos"));
+
+      expect(scrollTo).not.toHaveBeenCalled();
+      await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 1280, behavior: "auto" }));
+    });
+
+    it("el hash se actualiza al instante (es la intencion del usuario); lo que espera es el scroll", () => {
+      renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a dos"));
+
+      expect(window.location.hash).toBe("#dos");
+    });
+
+    it("la banda de la cortina se pinta mientras dura y vuelve a ocultarse", async () => {
+      curtain.ms = 400;
+      renderWithLinks();
+      let sawVisible = false;
+      const observer = new MutationObserver(() => {
+        if (curtainBand().style.visibility === "visible") sawVisible = true;
+      });
+      observer.observe(curtainBand(), { attributes: true, attributeFilter: ["style"] });
+
+      fireEvent.click(screen.getByText("ir a dos"));
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalled());
+      await waitFor(() => expect(sawVisible).toBe(true));
+      await waitFor(() => expect(curtainBand().style.visibility).toBe("hidden"), { timeout: 2000 });
+      observer.disconnect();
+    });
+
+    it("dos clics seguidos a destinos LEJANOS: la cortina solo cambia de destino y se salta una vez, al ultimo", async () => {
+      renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a dos"));
+      fireEvent.click(screen.getByText("ir a tres"));
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalled());
+      await act(() => new Promise<void>((resolve) => setTimeout(resolve, 120)));
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenCalledWith({ top: 3160, behavior: "auto" });
+    });
+
+    it("un salto DIRECTO posterior (a donde ya estas) anula el pendiente: lo ultimo manda", async () => {
+      // "ir a uno" con la pista en el escenario 0: no hay cortina (nada que tapar), pero
+      // el salto pendiente a "dos" no puede acabar ganando al ultimo clic.
+      renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a dos"));
+      fireEvent.click(screen.getByText("ir a uno"));
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalled());
+      await act(() => new Promise<void>((resolve) => setTimeout(resolve, 120)));
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "auto" });
+    });
+
+    it("atras/adelante (hashchange) salta DIRECTO: el navegador ya repuso el scroll, taparlo no sirve", () => {
+      // Con Atras/Adelante el navegador restaura el scroll de esa entrada ANTES de avisar,
+      // asi que el usuario ya vio el salto. Una cortina despues solo anadiria un segundo
+      // corte (verificado en Chrome). Solo los clics llevan cortina.
+      renderWithLinks();
+
+      window.history.replaceState(null, "", "#dos");
+      fireEvent(window, new HashChangeEvent("hashchange"));
+
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1280, behavior: "auto" });
+      expect(document.querySelector('[data-ink-band="jump"]')).toHaveStyle({ visibility: "hidden" });
+    });
+
+    it("saltar a donde YA estas no abre cortina: no hay nada que tapar", () => {
+      renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a uno")); // la pista esta en el escenario 0, scroll 0
+
+      expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "auto" });
+    });
+
+    it("al abrir la pagina con un hash el salto es DIRECTO: sin cortina al cargar", () => {
+      window.history.replaceState(null, "", "#dos");
+
+      renderWithLinks();
+
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1280, behavior: "auto" });
+    });
+
+    it("al desmontar con un salto en curso no hay scroll fantasma", async () => {
+      const { unmount } = renderWithLinks();
+
+      fireEvent.click(screen.getByText("ir a dos"));
+      unmount();
+      await act(() => new Promise<void>((resolve) => setTimeout(resolve, 120)));
+
+      expect(scrollTo).not.toHaveBeenCalled();
+    });
+  });
+
+  it("un clic en un ancla interna lleva la pista al inicio de ese escenario", async () => {
     renderWithLinks();
 
     const notCancelled = fireEvent.click(screen.getByText("ir a dos"));
 
     expect(notCancelled).toBe(false); // se hizo preventDefault: lo gestiona el sitio
-    expect(scrollTo).toHaveBeenCalledWith({ top: 1280, behavior: "auto" });
+    // El salto espera a que la cortina de tinta cubra la pantalla.
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 1280, behavior: "auto" }));
   });
 
   it("deja la URL como la dejaria el navegador: hash actualizado", () => {
@@ -275,9 +392,11 @@ describe("navegacion del modo escenarios", () => {
     });
   });
 
-  it("tras saltar sincroniza su posicion en el MISMO instante, sin esperar al evento de scroll", () => {
+  it("tras saltar sincroniza su posicion sin esperar al evento de scroll", async () => {
     // El navegador entrega el evento `scroll` un frame despues; sin sincronizar,
     // ese frame se pintaria con el escenario anterior (un parpadeo del escenario 0).
+    // Este scrollTo de prueba NO dispara ningun `scroll`: si el escenario activo
+    // cambia, es porque el salto sincronizo `scrollY` por su cuenta.
     scrollTo.mockImplementation(((options: ScrollToOptions) => {
       Object.defineProperty(window, "scrollY", { configurable: true, value: options.top });
     }) as never);
@@ -285,9 +404,8 @@ describe("navegacion del modo escenarios", () => {
 
     fireEvent.click(screen.getByText("ir a dos"));
 
-    expect(document.querySelector("[data-stage-track]")).toHaveAttribute(
-      "data-stage-active",
-      "1",
+    await waitFor(() =>
+      expect(document.querySelector("[data-stage-track]")).toHaveAttribute("data-stage-active", "1"),
     );
   });
 

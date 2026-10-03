@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sectionsMeta } from "@/sections/meta";
-import { TRANSITIONS, transitionAfter } from "./transitions";
+import { frontEdgeOf, TRANSITIONS, transitionAfter, type TransitionSpec } from "./transitions";
 
 /**
  * Test de INTEGRIDAD de la tabla de transiciones: el mismo estilo que
@@ -52,6 +52,46 @@ describe("TRANSITIONS", () => {
   it("cada transicion tiene un efecto propio: ninguno se repite en toda la tabla", () => {
     const effects = TRANSITIONS.map((transition) => transition.effect);
     expect(new Set(effects).size).toBe(effects.length);
+  });
+});
+
+describe("frontEdgeOf: la forma del frente de tinta", () => {
+  it("nunca es `rule`: el frente de tinta es una MASA, no un trazo fino", () => {
+    for (const transition of TRANSITIONS) {
+      expect(frontEdgeOf(transition)).not.toBe("rule");
+    }
+  });
+
+  it("si el canto de la seccion entrante es una masa, el frente es ese mismo canto", () => {
+    const sweep = TRANSITIONS.find((transition) => transition.edge === "sweep") as TransitionSpec;
+    const splash = TRANSITIONS.find((transition) => transition.edge === "splash") as TransitionSpec;
+
+    expect(frontEdgeOf(sweep)).toBe("sweep");
+    expect(frontEdgeOf(splash)).toBe("splash");
+  });
+
+  it("si el canto es `rule` (mismo suelo, solo un trazo), el frente sale del efecto", () => {
+    const brushSweep = TRANSITIONS.find((transition) => transition.effect === "brush-sweep") as TransitionSpec;
+    const verticalStroke = TRANSITIONS.find((transition) => transition.effect === "vertical-stroke") as TransitionSpec;
+
+    expect(brushSweep.edge).toBe("rule");
+    expect(frontEdgeOf(brushSweep)).toBe("sweep");
+    expect(frontEdgeOf(verticalStroke)).toBe("dry");
+  });
+
+  it("un efecto sin forma propia cae a `sweep` en vez de dejar el frente sin dibujar", () => {
+    const unknown: TransitionSpec = { ...TRANSITIONS[4], edge: "rule", effect: "splash" };
+
+    expect(frontEdgeOf(unknown)).toBe("sweep");
+  });
+
+  it("ninguna transicion adyacente repite frente con el mismo espejado (DESIGN_SYSTEM §5.1)", () => {
+    TRANSITIONS.slice(1).forEach((transition, index) => {
+      const previous = TRANSITIONS[index];
+      expect(`${frontEdgeOf(transition)}:${transition.mirror}`).not.toBe(
+        `${frontEdgeOf(previous)}:${previous.mirror}`,
+      );
+    });
   });
 });
 

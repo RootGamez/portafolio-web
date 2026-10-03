@@ -11,6 +11,8 @@
  * components/stage/useStageNavigation.ts.
  */
 
+import { CURTAIN_MIN_DISTANCE_PX } from "./config";
+
 /**
  * Indice del escenario al que apunta un hash (`#proyectos` o `proyectos`), o -1
  * si esta vacio, es desconocido o esta mal codificado.
@@ -64,4 +66,14 @@ export function isPlainPrimaryClick(event: ClickLike): boolean {
     !event.altKey &&
     !event.defaultPrevented
   );
+}
+
+/**
+ * ¿Hace falta tapar un salto con la cortina de tinta? Solo si de verdad cambia lo
+ * que se ve: si el destino es donde ya estas (o la diferencia es de redondeo) no hay
+ * nada que ocultar y se salta directamente. Un valor no finito tampoco abre cortina.
+ */
+export function needsCurtain(currentScroll: number, destinationScroll: number): boolean {
+  if (!Number.isFinite(currentScroll) || !Number.isFinite(destinationScroll)) return false;
+  return Math.abs(destinationScroll - currentScroll) >= CURTAIN_MIN_DISTANCE_PX;
 }

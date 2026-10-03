@@ -132,17 +132,73 @@ describe("StageDeck", () => {
     await waitFor(() => expect(content(1).style.transform).toContain("-300px"));
   });
 
-  it("durante la transicion los dos escenarios vecinos se ven a la vez (crossfade provisional)", async () => {
-    renderDeck();
+  describe("el cambio de escenario durante una transicion es DURO y ocurre en SWAP_AT", () => {
+    // T0 va de 480 a 1280: SWAP_AT (t = 0,5) cae en 880. Lo tapa la tinta.
+    it("antes de SWAP_AT solo se ve el escenario que sale", async () => {
+      renderDeck();
 
-    setScrollY(880); // t = 0.5: ambos a 0.5
+      setScrollY(879);
 
-    await waitFor(() => {
-      expect(Number(layer(0).style.opacity)).toBeCloseTo(0.5, 2);
-      expect(Number(layer(1).style.opacity)).toBeCloseTo(0.5, 2);
+      await waitFor(() => expect(layer(0).style.visibility).toBe("visible"));
+      expect(Number(layer(0).style.opacity)).toBe(1);
+      expect(layer(1).style.visibility).toBe("hidden");
     });
-    // El tercero no participa y queda fuera de pintado.
-    expect(layer(2).style.visibility).toBe("hidden");
+
+    it("desde SWAP_AT solo se ve el que entra (nunca los dos a la vez)", async () => {
+      renderDeck();
+
+      setScrollY(880);
+
+      await waitFor(() => expect(layer(1).style.visibility).toBe("visible"));
+      expect(Number(layer(1).style.opacity)).toBe(1);
+      expect(layer(0).style.visibility).toBe("hidden");
+      // El tercero no participa y queda fuera de pintado.
+      expect(layer(2).style.visibility).toBe("hidden");
+    });
+
+    it("la capa que se ve es siempre la que tiene el foco y el lector (la activa)", async () => {
+      renderDeck();
+
+      setScrollY(900);
+
+      await waitFor(() => expect(layer(1).style.visibility).toBe("visible"));
+      expect(layer(1)).not.toHaveAttribute("inert");
+      expect(layer(0)).toHaveAttribute("inert");
+    });
+  });
+
+  describe("la tinta de las transiciones", () => {
+    const overlay = () => document.querySelector("[data-ink-overlay]") as HTMLElement;
+
+    it("se pinta DENTRO del visor, por encima de las capas (bajo la barra de nav)", () => {
+      renderDeck();
+
+      const visor = document.querySelector("[data-stage-visor]") as HTMLElement;
+      expect(visor).toContainElement(overlay());
+      expect(visor.lastElementChild).toBe(overlay());
+    });
+
+    it("hay una banda por cada par de escenarios adyacentes (3 escenarios -> 2 bandas)", () => {
+      renderDeck();
+
+      const transitionBands = overlay().querySelectorAll("[data-ink-band]:not([data-ink-band='jump'])");
+      expect(transitionBands).toHaveLength(STAGES.length - 1);
+    });
+
+    it("las bandas se dimensionan con el alto MEDIDO del visor", () => {
+      renderDeck();
+
+      // 800 de visor -> bordes de 176 px (22 %) -> banda de 800 + 2 * 176.
+      const band = overlay().querySelector("[data-ink-band]") as HTMLElement;
+      expect(band.style.height).toBe("1152px");
+    });
+
+    it("no capta eventos: el contenido de debajo sigue siendo clicable y enfocable", () => {
+      renderDeck();
+
+      expect(overlay()).toHaveAttribute("aria-hidden", "true");
+      expect(overlay().className).toContain("pointer-events-none");
+    });
   });
 
   it("vuelve a medir cuando cambia el tamano del contenido", () => {

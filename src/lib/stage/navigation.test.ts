@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPlainPrimaryClick, stageIndexFromAnchor, stageIndexFromHash } from "./navigation";
+import { needsCurtain, isPlainPrimaryClick, stageIndexFromAnchor, stageIndexFromHash } from "./navigation";
 
 const SLUGS = ["inicio", "sobre-mi", "proyectos", "contacto"] as const;
 
@@ -83,5 +83,26 @@ describe("isPlainPrimaryClick", () => {
     ["ya cancelado por otro manejador", { defaultPrevented: true }],
   ] as const)("rechaza %s: el navegador debe hacer lo suyo", (_name, patch) => {
     expect(isPlainPrimaryClick(click(patch))).toBe(false);
+  });
+});
+
+describe("needsCurtain: solo se tapa un salto que de verdad cambia lo que se ve", () => {
+  it("un salto lejos necesita cortina, hacia delante y hacia atras", () => {
+    expect(needsCurtain(0, 5000)).toBe(true);
+    expect(needsCurtain(9000, 1200)).toBe(true);
+  });
+
+  it("si el destino es donde ya estas, no hay nada que tapar", () => {
+    expect(needsCurtain(1280, 1280)).toBe(false);
+  });
+
+  it("una diferencia de redondeo (menos de 1px) tampoco", () => {
+    expect(needsCurtain(1280, 1280.4)).toBe(false);
+    expect(needsCurtain(1280.4, 1280)).toBe(false);
+  });
+
+  it("un valor no finito no abre cortina (se salta directamente)", () => {
+    expect(needsCurtain(Number.NaN, 100)).toBe(false);
+    expect(needsCurtain(0, Number.POSITIVE_INFINITY)).toBe(false);
   });
 });

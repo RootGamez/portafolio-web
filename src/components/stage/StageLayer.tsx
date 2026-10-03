@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode, type Ref } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
-import { crossfadeOpacity, panFor, stageProgress, type Layout } from "@/lib/stage/timeline";
+import { layerOpacity, panFor, stageProgress, type Layout } from "@/lib/stage/timeline";
 import { StageContext, type StageContextValue } from "./StageContext";
 
 type Props = {
@@ -33,7 +33,8 @@ function resetLayerScroll(layer: HTMLElement): void {
  * que saca del pintado a las capas que no participan).
  *
  *   - inert:      una capa que no es la activa no recibe foco, clics ni lector
- *                 de pantalla, aunque durante el crossfade se vea a medias;
+ *                 de pantalla (y tampoco se ve: el cambio de capa es duro, en
+ *                 SWAP_AT, y lo tapa la tinta de la transicion);
  *   - overflow:   el contenido que no cabe en el visor se recorta aqui y sube
  *                 con el scroll (pan), asi que la capa no necesita altura propia.
  */
@@ -51,7 +52,7 @@ export function StageLayer({
     const pan = panFor(layout.get(), index, scrollOffset.get());
     return pan === 0 ? 0 : -pan;
   });
-  const opacity = useTransform(() => crossfadeOpacity(layout.get(), index, scrollOffset.get()));
+  const opacity = useTransform(() => layerOpacity(layout.get(), index, scrollOffset.get()));
   const visibility = useTransform((): "visible" | "hidden" =>
     opacity.get() > 0 ? "visible" : "hidden",
   );

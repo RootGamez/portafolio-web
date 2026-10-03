@@ -52,6 +52,29 @@ export const TRANSITIONS: readonly TransitionSpec[] = [
   { from: "contacto", to: "fin", effect: "seal", ink: "sumi", edge: "dry", mirror: true },
 ];
 
+/** Un canto que es una MASA de pintura (todos menos `rule`, que es un trazo fino). */
+export type MassEdge = Exclude<EdgeVariant, "rule">;
+
+/**
+ * Cuando el canto de la seccion es `rule` (mismo suelo en las dos secciones: solo
+ * un trazo) no hay masa que usar de frente de tinta; se toma una segun el efecto.
+ * Elegidas para que ningun frente se repita en transiciones adyacentes.
+ */
+const FRONT_FOR_RULE: Readonly<Partial<Record<TransitionEffect, MassEdge>>> = {
+  "brush-sweep": "sweep",
+  "vertical-stroke": "dry",
+};
+
+/**
+ * La forma del frente de tinta de una transicion: siempre una MASA, porque la
+ * banda de tinta cubre la pantalla. Es el canto de la seccion entrante y, si ese
+ * canto es solo un trazo, la forma propia del efecto (`sweep` si no tiene).
+ */
+export function frontEdgeOf(spec: TransitionSpec): MassEdge {
+  if (spec.edge !== "rule") return spec.edge;
+  return FRONT_FOR_RULE[spec.effect] ?? "sweep";
+}
+
 /** La transicion que sale del escenario `index`; `undefined` en el ultimo o fuera de rango. */
 export function transitionAfter(index: number): TransitionSpec | undefined {
   return TRANSITIONS[index];

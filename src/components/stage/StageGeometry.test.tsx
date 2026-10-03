@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { DeckProvider } from "./DeckContext";
 import { StageDeck } from "./StageDeck";
 import { STAGES, stubStageGeometry, VISOR } from "@/test/stageGeometry";
+
+// La cortina real dura 420 ms; aqui lo justo para que corra por frames.
+vi.mock("@/lib/stage/config", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/stage/config")>()),
+  JUMP_CURTAIN_MS: 40,
+}));
 
 /**
  * Geometria real de la pista: lo que jsdom no calcula y los demas tests dejaban
@@ -45,16 +51,18 @@ describe("origen de la pista", () => {
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
   });
 
-  it("es el tope de la pista en el documento: una cabecera encima desplaza todos los saltos", () => {
+  it("es el tope de la pista en el documento: una cabecera encima desplaza todos los saltos", async () => {
     stubStageGeometry({ trackTop: 100 });
     renderDeck();
 
     fireEvent.click(screen.getByText("ir a dos"));
 
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 100 + STAGE_TWO_START, behavior: "auto" });
+    await waitFor(() =>
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 100 + STAGE_TWO_START, behavior: "auto" }),
+    );
   });
 
-  it("descuenta el `top` del visor sticky (la barra de nav fija en movil)", () => {
+  it("descuenta el `top` del visor sticky (la barra de nav fija en movil)", async () => {
     stubStageGeometry({ trackTop: 100 });
     stubStickyTop(56);
     renderDeck();
@@ -62,16 +70,18 @@ describe("origen de la pista", () => {
     fireEvent.click(screen.getByText("ir a dos"));
 
     // El scroll 0 de la pista es cuando su tope llega a 56px del borde de la ventana.
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 100 - 56 + STAGE_TWO_START, behavior: "auto" });
+    await waitFor(() =>
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 100 - 56 + STAGE_TWO_START, behavior: "auto" }),
+    );
   });
 
-  it("sin cabecera ni barra (escritorio) el origen es 0", () => {
+  it("sin cabecera ni barra (escritorio) el origen es 0", async () => {
     stubStageGeometry();
     renderDeck();
 
     fireEvent.click(screen.getByText("ir a dos"));
 
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: STAGE_TWO_START, behavior: "auto" });
+    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: STAGE_TWO_START, behavior: "auto" }));
   });
 });
 
