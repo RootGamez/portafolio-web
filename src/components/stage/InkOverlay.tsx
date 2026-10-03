@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import { EdgeMass } from "@/components/ink/EdgeMass";
 import { EDGE_VIEWBOX_HEIGHT, EDGE_VIEWBOX_WIDTH } from "@/components/ink/edgeShapes";
@@ -7,6 +7,7 @@ import { transitionProgress, type Layout } from "@/lib/stage/timeline";
 import { frontEdgeOf, type MassEdge, type TransitionSpec } from "@/lib/stage/transitions";
 import type { Ground } from "@/sections/meta";
 import { ChapterCard } from "./ChapterCard";
+import { InkCanvas } from "./InkCanvas";
 
 type Props = {
   /** Las transiciones a pintar, en orden: la i une el escenario i con el i+1. */
@@ -129,7 +130,12 @@ const CURTAIN_INK: Ground = "sumi";
 const CURTAIN_FRONT: MassEdge = "sweep";
 
 /**
- * La tinta de las transiciones entre escenarios (fase 2: SVG/DOM).
+ * La tinta de las transiciones entre escenarios.
+ *
+ * Dos pintores para las transiciones de SCROLL (docs/PLAN_ESCENARIOS.md §6, tiers):
+ * el canvas WebGL (T3/T2, InkCanvas) cuando el dispositivo lo aguanta, y las bandas
+ * SVG (T1) mientras no, o si la GPU falla. Nunca los dos a la vez. La tarjeta de
+ * capitulo y la cortina de los saltos son siempre DOM, por encima del canvas.
  *
  * Va DENTRO del visor, por encima de las capas: el visor ya empieza bajo la barra
  * de nav, asi que la tinta nunca la tapa. Es decorativo (`aria-hidden`) y no capta
@@ -137,7 +143,8 @@ const CURTAIN_FRONT: MassEdge = "sweep";
  *
  * `memo`: StageDeck re-renderiza en cada cruce de escenario y todas las props son
  * estables (MotionValues, un numero y una lista memoizada); sin esto arrastraba ~20
- * bandas y 9 tarjetas (~74 `useTransform`) cada vez.
+ * bandas y 9 tarjetas (~74 `useTransform`) cada vez. Ademas, una lista nueva en
+ * cada render reiniciaria el motor WebGL (InkCanvas depende de `transitions`).
  */
 export const InkOverlay = memo(function InkOverlay({
   transitions,
@@ -146,22 +153,34 @@ export const InkOverlay = memo(function InkOverlay({
   curtain,
   visorHeight,
 }: Props) {
+  // true mientras pinta el WebGL: entonces sobran las bandas SVG de scroll.
+  const [glActive, setGlActive] = useState(false);
+
   return (
     <div
       aria-hidden="true"
       data-ink-overlay=""
+      data-ink-renderer={glActive ? "webgl" : "svg"}
       className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
     >
-      {transitions.map((spec, index) => (
-        <ScrollInkBand
-          key={`${spec.from}-${spec.to}`}
-          index={index}
-          spec={spec}
-          layout={layout}
-          scrollOffset={scrollOffset}
-          visorHeight={visorHeight}
-        />
-      ))}
+      {/* El canvas, el PRIMERO: debajo de las tarjetas y de la cortina. */}
+      <InkCanvas
+        transitions={transitions}
+        layout={layout}
+        scrollOffset={scrollOffset}
+        onActiveChange={setGlActive}
+      />
+      {!glActive &&
+        transitions.map((spec, index) => (
+          <ScrollInkBand
+            key={`${spec.from}-${spec.to}`}
+            index={index}
+            spec={spec}
+            layout={layout}
+            scrollOffset={scrollOffset}
+            visorHeight={visorHeight}
+          />
+        ))}
       {/* Las tarjetas, DESPUES de todas las bandas: se leen sobre la tinta. */}
       {transitions.map((spec, index) => (
         <ChapterCard

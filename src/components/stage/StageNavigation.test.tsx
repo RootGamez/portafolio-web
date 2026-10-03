@@ -13,6 +13,8 @@ vi.mock("@/lib/stage/config", async (importOriginal) => ({
   get JUMP_CURTAIN_MS() {
     return curtain.ms;
   },
+  // Este mock sustituye al de setup.ts: repite su geometria de referencia.
+  TRANSITION_SCREENS: 1,
 }));
 
 function ActiveProbe() {

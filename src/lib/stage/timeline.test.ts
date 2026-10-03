@@ -13,7 +13,7 @@ import {
   transitionProgress,
   type StageSpec,
 } from "./timeline";
-import { CARD_END, COVER_END, SWAP_AT } from "./config";
+import { CARD_END, COVER_END, SWAP_AT, TRANSITION_SCREENS } from "./config";
 
 /**
  * Escenario de referencia. Con un visor de 800px:
@@ -37,6 +37,14 @@ const SPECS: readonly StageSpec[] = [
 const layout = buildLayout(SPECS, VIEWPORT);
 
 describe("buildLayout", () => {
+  it("cada transicion mide TRANSITION_SCREENS altos de visor (el tempo sale de config.ts)", () => {
+    const layout = buildLayout([{ contentHeight: 600 }, { contentHeight: 600 }, { contentHeight: 600 }], 737);
+
+    layout.transitions.forEach((transition) => {
+      expect(transition.length).toBe(Math.round(TRANSITION_SCREENS * 737));
+    });
+  });
+
   it("reparte escenarios y transiciones en tramos contiguos", () => {
     expect(layout.stages.map((s) => [s.start, s.end])).toEqual([
       [0, 480],

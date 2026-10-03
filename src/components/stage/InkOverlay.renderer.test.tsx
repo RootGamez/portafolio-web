@@ -1,0 +1,42 @@
+import { useEffect } from "react";
+import { describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/react";
+import { motionValue } from "motion/react";
+import { buildLayout } from "@/lib/stage/timeline";
+import { TRANSITIONS } from "@/lib/stage/transitions";
+import { InkOverlay } from "./InkOverlay";
+
+/**
+ * El cambio de pintor: cuando el canvas WebGL avisa de que esta activo, las bandas
+ * SVG de SCROLL sobran (pintarian lo mismo dos veces); la cortina de los saltos y
+ * las tarjetas siguen, que son DOM por encima del canvas. El canvas se sustituye
+ * por un doble que se declara activo al montar (el de verdad necesita GPU).
+ */
+vi.mock("./InkCanvas", () => ({
+  InkCanvas: ({ onActiveChange }: { onActiveChange: (active: boolean) => void }) => {
+    useEffect(() => onActiveChange(true), [onActiveChange]);
+    return <canvas data-ink-canvas="" />;
+  },
+}));
+
+describe("InkOverlay con la tinta WebGL activa", () => {
+  it("quita las bandas SVG de scroll y deja la cortina de los saltos y las tarjetas", () => {
+    const { container } = render(
+      <InkOverlay
+        transitions={TRANSITIONS.slice(0, 2)}
+        layout={motionValue(buildLayout([{ contentHeight: 600 }, { contentHeight: 600 }, { contentHeight: 600 }], 800))}
+        scrollOffset={motionValue(0)}
+        curtain={motionValue(0)}
+        visorHeight={800}
+      />,
+    );
+    const overlay = container.querySelector("[data-ink-overlay]");
+
+    expect(overlay).toHaveAttribute("data-ink-renderer", "webgl");
+    const bands = [...container.querySelectorAll("[data-ink-band]")].map((band) => band.getAttribute("data-ink-band"));
+    expect(bands).toEqual(["jump"]);
+    expect(container.querySelectorAll("[data-chapter-card]")).toHaveLength(2);
+    // El canvas va el primero: debajo de tarjetas y cortina.
+    expect(overlay?.firstElementChild).toHaveAttribute("data-ink-canvas");
+  });
+});

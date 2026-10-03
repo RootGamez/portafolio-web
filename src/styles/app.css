@@ -82,6 +82,7 @@
 
   --g-tone: var(--ink-900);
   --g-tone-opacity: 0.14;
+  --g-ink-rim: var(--washi-400); /* pigmento seco en el frente de la tinta WebGL */
 
   --g-focus-ring: var(--ink-900);
   --g-focus-halo: var(--kin-500);
@@ -111,6 +112,7 @@
 
   --g-tone: var(--washi-200);
   --g-tone-opacity: 0.1;
+  --g-ink-rim: var(--ink-700); /* pigmento seco en el frente de la tinta WebGL */
 
   --g-focus-ring: var(--washi-100);
   --g-focus-halo: var(--kin-500);
@@ -142,6 +144,7 @@
 
   --g-tone: var(--ink-900);
   --g-tone-opacity: 0.12;
+  --g-ink-rim: var(--shu-700); /* pigmento seco en el frente de la tinta WebGL */
 
   --g-focus-ring: var(--washi-100);
   --g-focus-halo: var(--ink-900);
@@ -170,6 +173,7 @@
 
   --g-tone: var(--ink-900);
   --g-tone-opacity: 0.13;
+  --g-ink-rim: var(--kin-700); /* pigmento seco en el frente de la tinta WebGL */
 
   --g-focus-ring: var(--ink-900);
   --g-focus-halo: var(--washi-100);
@@ -387,6 +391,14 @@ html {
    html[data-deck="on"] mientras esta montado (docs/PLAN_ESCENARIOS.md §6). */
 html[data-deck="on"] {
   scroll-behavior: auto;
+  /* Sin barra de scroll en el deck (decision del usuario, 2026-10-03: rompe la
+     inmersion). El scroll sigue siendo NATIVO (rueda, tacto, teclado) y la posicion
+     la dice el riel, que marca el escenario activo. En modo lineal la barra vuelve. */
+  scrollbar-width: none;
+}
+
+html[data-deck="on"]::-webkit-scrollbar {
+  display: none;
 }
 
 /* Modo lineal: con la barra de nav fija arriba (<1024px) el navegador alinea el

@@ -8,6 +8,8 @@ import { STAGES, stubStageGeometry, VISOR } from "@/test/stageGeometry";
 vi.mock("@/lib/stage/config", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/stage/config")>()),
   JUMP_CURTAIN_MS: 40,
+  // Este mock sustituye al de setup.ts: repite su geometria de referencia.
+  TRANSITION_SCREENS: 1,
 }));
 
 /**

@@ -6,8 +6,13 @@
  * numeros. Cambiar el ritmo de la pagina es tocar este archivo.
  */
 
-/** Largo de una transicion de tinta, en alturas de visor (1 = una pantalla de scroll). */
-export const TRANSITION_SCREENS = 1;
+/**
+ * Largo de una transicion de tinta, en alturas de visor (1 = una pantalla de
+ * scroll). 2,5 desde el 2026-10-03 (antes 1): el usuario pidio que la tinta
+ * necesite mas scroll, para que se vea fluida y de tiempo a mirarla. Las fases
+ * (cubrir, tarjeta, borrar) son fracciones de este largo: escalan solas.
+ */
+export const TRANSITION_SCREENS = 2.5;
 
 /**
  * Pausa inicial de un escenario, en alturas de visor: el contenido se compone
@@ -47,6 +52,45 @@ export const CARD_SHOW_FULL = 0.42;
 export const CARD_HIDE_START = 0.58;
 export const CARD_HIDE_END = 0.68;
 export const CARD_STROKE_START = 0.38;
+
+/**
+ * Tinta WebGL (fase 3): un CAMPO de llegada umbralizado por el progreso, no una
+ * banda. Para que la tarjeta de capitulo se lea igual que con la banda SVG, el
+ * campo cubre la pantalla ENTERA justo cuando la tarjeta empieza a verse y no
+ * empieza a borrar hasta que se ha ido del todo (frame.test.ts lo comprueba).
+ */
+export const FIELD_COVER_END = CARD_SHOW_START;
+export const FIELD_ERASE_START = CARD_HIDE_END;
+
+/**
+ * Pasos de la trama de puntos que precede al frente de tinta WebGL, en px CSS:
+ * los mismos que `--tone-fine`, `--tone-med` y `--tone-coarse` de app.css.
+ */
+export const TONE_PITCHES_PX: readonly number[] = [5, 8, 13];
+
+/**
+ * Dos dibujos de la tinta WebGL separados por mas de esto no son "fotogramas
+ * seguidos" sino reposo (el usuario dejo de hacer scroll): ese hueco no cuenta
+ * como lentitud en el monitor de frame-time.
+ */
+export const INK_FRAME_GAP_MS = 250;
+
+/**
+ * Monitor de calidad de la tinta WebGL: mira los ultimos INK_MONITOR_WINDOW
+ * fotogramas seguidos y baja un tier si al menos INK_SLOW_SHARE de ellos pasan de
+ * INK_FRAME_BUDGET_MS (la puerta movil del plan, §11). Es una proporcion y no un
+ * p95 a proposito: el cambio de escenario mete 2-3 tirones de React (27-55 ms,
+ * medidos en 3.0) que no son culpa de la GPU y un p95 los tomaria por lentitud.
+ */
+export const INK_FRAME_BUDGET_MS = 24;
+export const INK_MONITOR_WINDOW = 40;
+export const INK_SLOW_SHARE = 0.25;
+
+/**
+ * Espera, tras el evento `load`, antes de descargar el chunk WebGL cuando el
+ * navegador no tiene `requestIdleCallback` (Safari): que no compita con la carga.
+ */
+export const INK_GL_LOAD_DELAY_MS = 300;
 
 /**
  * Longitud minima (fraccion del trazo) para pintar el subrayado: por debajo, una

@@ -8,6 +8,19 @@ afterEach(() => {
 });
 
 /**
+ * Geometria de REFERENCIA de los tests: una transicion = un visor. El largo real
+ * (TRANSITION_SCREENS en config.ts) es un ajuste de ritmo que el usuario afina a
+ * ojo; los tests prueban la logica del motor con numeros faciles de seguir
+ * ("T0 480..1280" con un visor de 800) y no tienen que reescribirse cada vez que
+ * cambia el tempo. La formula (largo = TRANSITION_SCREENS × visor) la sigue
+ * comprobando timeline.test.ts con la constante importada.
+ */
+vi.mock("@/lib/stage/config", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/stage/config")>()),
+  TRANSITION_SCREENS: 1,
+}));
+
+/**
  * jsdom no implementa matchMedia, y el sitio entero cuelga de el:
  * usePrefersReducedMotion y useInViewVideo preguntan por
  * `prefers-reduced-motion` y por `(hover: none)`.
