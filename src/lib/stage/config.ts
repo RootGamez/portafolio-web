@@ -118,6 +118,12 @@ export const INK_GL_LOAD_DELAY_MS = 300;
  */
 export const CARD_STROKE_MIN_VISIBLE = 0.02;
 
+/** El mismo minimo para cualquier trazo que se dibuje con el scroll (`ScrubDraw`). */
+export const SCRUB_DRAW_MIN_VISIBLE = CARD_STROKE_MIN_VISIBLE;
+
+/** Recorrido por defecto, en px, de un elemento que aparece con el scroll (`ScrubReveal`). */
+export const SCRUB_REVEAL_DISTANCE_PX = 24;
+
 /**
  * Cuantos escenarios a cada lado del activo cuentan como "cercanos": ahi se
  * precargan los medios pesados (videos) para que esten listos al llegar.

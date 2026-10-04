@@ -267,8 +267,10 @@ export function transitionProgress(layout: Layout, index: number, scroll: number
  * SWAP_AT y la entrante desde ahi. El cambio es duro porque queda tapado por la
  * tinta (que lo cubre todo entre COVER_END y CARD_END), y asi el cambio visual y
  * el de estado (`activeIndex`: riel, `inert`, lector de pantalla) son el MISMO.
+ *
+ * Sin medidas (layout vacio) `locate` da el escenario 0 y su capa se ve: el Hero
+ * pinta en el primer fotograma sin esperar a medir (su foto es el LCP).
  */
 export function layerOpacity(layout: Layout, index: number, scroll: number): 0 | 1 {
-  if (!layout.stages[index]) return 0;
   return activeIndex(locate(layout, scroll)) === index ? 1 : 0;
 }

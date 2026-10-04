@@ -417,7 +417,17 @@ describe("layerOpacity: una sola capa se ve y el cambio ocurre en SWAP_AT (ocult
 
   it("un indice inexistente, un layout vacio o un scroll no finito devuelven 0 o una capa valida, nunca NaN", () => {
     expect(layerOpacity(layout, 7, 100)).toBe(0);
-    expect(layerOpacity(EMPTY_LAYOUT, 0, 100)).toBe(0);
     expect(layerOpacity(layout, 0, Number.NaN)).toBe(1);
+  });
+
+  // LCP: antes de medir (layout vacio) el Hero tiene que verse ya en el primer
+  // fotograma. Si todas las capas salen ocultas, la foto del Hero (el elemento
+  // LCP) espera a la medicion y a un fotograma mas de Motion (medido: ~+0,5 s en
+  // movil con CPU 4x).
+  it("sin medidas (layout vacio) se ve la capa 0 y solo ella", () => {
+    expect(layerOpacity(EMPTY_LAYOUT, 0, 0)).toBe(1);
+    expect(layerOpacity(EMPTY_LAYOUT, 0, 100)).toBe(1);
+    expect(layerOpacity(EMPTY_LAYOUT, 1, 0)).toBe(0);
+    expect(layerOpacity(EMPTY_LAYOUT, 9, 0)).toBe(0);
   });
 });

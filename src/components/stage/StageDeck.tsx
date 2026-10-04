@@ -10,6 +10,7 @@ import {
 import { useMotionValue, useMotionValueEvent, useTransform } from "motion/react";
 import { useWindowScrollY } from "@/hooks/useWindowScrollY";
 import { NEAR_RANGE, REANCHOR_TOLERANCE_PX } from "@/lib/stage/config";
+import { stageIndexFromHash } from "@/lib/stage/navigation";
 import { revealDelta } from "@/lib/stage/reveal";
 import { TRANSITIONS } from "@/lib/stage/transitions";
 import {
@@ -158,9 +159,7 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
   useMotionValueEvent(scrollY, "change", syncActive);
   useMotionValueEvent(layout, "change", syncActive);
 
-  // Layout effect: la pista tiene que medirse ANTES del primer pintado, o la
-  // pagina saldria un frame sin alto.
-  useLayoutEffect(() => {
+  const startMeasuring = useCallback(() => {
     measure();
 
     const observer = new ResizeObserver(measure);
@@ -170,6 +169,29 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
     });
     return () => observer.disconnect();
   }, [measure]);
+
+  // Medir obliga al navegador a un layout de TODAS las capas y sus `setState`
+  // a otro layout completo: antes del primer pintado eso retrasaba el LCP ~0,5 s
+  // en movil (traza con CPU 4x). Solo hace falta medir antes de pintar si la
+  // pista arranca LEJOS del principio (hash o restauracion), para no ensenar un
+  // fotograma del Hero y luego saltar. Si arranca en el 0, el primer fotograma
+  // es el Hero con o sin medidas: se mide despues de pintar. Se decide al montar.
+  const [measureBeforePaint] = useState(
+    () =>
+      restoreIndex !== null ||
+      stageIndexFromHash(
+        window.location.hash,
+        stages.map((stage) => stage.slug),
+      ) !== -1,
+  );
+
+  useLayoutEffect(() => {
+    if (measureBeforePaint) return startMeasuring();
+  }, [measureBeforePaint, startMeasuring]);
+
+  useEffect(() => {
+    if (!measureBeforePaint) return startMeasuring();
+  }, [measureBeforePaint, startMeasuring]);
 
   // Re-anclaje: al cambiar las alturas (las fuentes o las imagenes llegan tarde)
   // un escenario anterior puede crecer o encogerse, y el scroll se quedaria en el
