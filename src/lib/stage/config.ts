@@ -29,6 +29,8 @@ export type StageTiming = { readonly introScreens?: number };
 
 export const STAGE_TIMING: Readonly<Record<string, StageTiming>> = {
   inicio: { introScreens: 1.5 },
+  "sobre-mi": { introScreens: 1.4 },
+  trayectoria: { introScreens: 1.2 },
 };
 
 /** Fin de la fase "cubrir" de una transicion (fraccion 0..1 de la transicion). */
@@ -137,6 +139,32 @@ export const SCRUB_REVEAL_DISTANCE_PX = 24;
 
 /** Ancho, en % del elemento, del borde difuminado con el que se borra un texto (`ScrubErase`). */
 export const SCRUB_ERASE_FEATHER_PCT = 18;
+
+/** Escala desde la que cae un sello (`ScrubStamp`): llega en el aire y golpea a tamano real. */
+export const SCRUB_STAMP_FROM_SCALE = 1.6;
+
+/**
+ * Fraccion del tramo de un sello en la que se vuelve opaco: deprisa, para que el
+ * golpe (que llega despues) se vea entero.
+ */
+export const SCRUB_STAMP_FADE_SHARE = 0.35;
+
+/**
+ * Cuanto se pasa el sello por debajo de su tamano al golpear antes de asentarse
+ * (constante de la curva "back-out" clasica: ~6 % de aplastamiento con 1.6).
+ */
+export const SCRUB_STAMP_OVERSHOOT = 1.70158;
+
+/**
+ * La LINEA DE LECTURA (ver `readingLine`), en fracciones del alto del visor:
+ * arranca en READING_LINE_START (lo de arriba, normalmente el titulo, ya cuenta
+ * como leido: sin scroll muerto hasta el primer elemento) y durante la intro
+ * baja hasta READING_LINE_RATIO: lo bastante abajo para que lo que ya se ve al
+ * entrar se anime en la intro, y lo bastante arriba para que lo que entra con
+ * el pan se vea entero antes de animarse.
+ */
+export const READING_LINE_START = 0.3;
+export const READING_LINE_RATIO = 0.8;
 
 /**
  * Cuantos escenarios a cada lado del activo cuentan como "cercanos": ahi se

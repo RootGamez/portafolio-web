@@ -1,10 +1,16 @@
+import type { ReactNode } from "react";
 import { Section } from "@/components/layout/Section";
 import { BrushStroke } from "@/components/ink/BrushStroke";
 import { InkPanel } from "@/components/ink/InkPanel";
 import { Sfx } from "@/components/ink/Sfx";
 import { Reveal } from "@/components/motion/Reveal";
+import { ScrubReach } from "@/components/motion/ScrubReach";
+import { ScrubReveal } from "@/components/motion/ScrubReveal";
+import { ScrubStamp } from "@/components/motion/ScrubStamp";
+import { useStage } from "@/components/stage/StageContext";
 import { timeline } from "@/data/timeline";
 import { STAGGER } from "@/lib/motion";
+import type { ScrubRange } from "@/lib/stage/scrub";
 import { getSectionMeta } from "@/sections/meta";
 
 /**
@@ -18,6 +24,12 @@ import { getSectionMeta } from "@/sections/meta";
  * con los hitos alternando lado. En movil el eje se va a la izquierda y todo
  * cae en una columna — alternar lados a 375px solo produciria dos columnas
  * de 150px ilegibles.
+ *
+ * MODO ESCENARIOS (Fase 4.3): cada hito se anima AL ALCANZARLO, cuando la linea
+ * de lectura del escenario lo cruza (`ScrubReach`): su tramo de eje se dibuja con
+ * el scroll, el nodo de oro se estampa ("se enciende"), llega el panel y revienta
+ * su onomatopeya. El eje se dibuja de hito en hito, asi que en conjunto es un
+ * solo trazo que avanza con la lectura. En modo lineal, el Reveal de siempre.
  *
  * POR QUE UN TRAZO POR HITO Y NO UNO SOLO PARA TODO EL EJE:
  * BrushStroke dispara con `viewport={{ amount: 0.6 }}`. Un unico trazo que
@@ -38,6 +50,44 @@ const META = getSectionMeta("trayectoria");
 const AXIS_D = "M6 1 C 3.4 14, 8.6 27, 5.4 40 S 8.8 66, 6 78 S 4.4 92, 6.6 99";
 const AXIS_VIEWBOX = "0 0 12 100";
 
+/*
+ * Tramos de cada hito sobre lo que la linea de lectura lo ha cruzado (0..1).
+ * El nodo esta arriba del hito (top-9): se enciende casi al llegar.
+ */
+const AXIS_DRAW: ScrubRange = [0, 1];
+const NODE_STAMP: ScrubRange = [0.04, 0.16];
+const PANEL_REVEAL: ScrubRange = [0.08, 0.42];
+const PANEL_RISE_PX = 32;
+const SFX_STAMP: ScrubRange = [0.36, 0.5];
+
+type MilestoneShellProps = {
+  readonly index: number;
+  readonly children: ReactNode;
+};
+
+/** El `li` de un hito: en el deck se mide para la lectura; en lineal entra por tiempo. */
+function MilestoneShell({ index, children }: MilestoneShellProps) {
+  const { mode } = useStage();
+  if (mode === "deck") {
+    return (
+      <ScrubReach as="li" className="relative pl-14 md:pl-0">
+        {children}
+      </ScrubReach>
+    );
+  }
+  return (
+    <Reveal
+      as="li"
+      className="relative pl-14 md:pl-0"
+      y={20}
+      amount={0.3}
+      delay={index * STAGGER}
+    >
+      {children}
+    </Reveal>
+  );
+}
+
 export function Trayectoria() {
   return (
     <Section
@@ -50,8 +100,8 @@ export function Trayectoria() {
       edgeMirror
     >
       <p className="mb-10 max-w-[62ch] text-body-lg text-on-ground-muted">
-        Estudio Ingeniería de Software en SENATI y soy autodidacta: aprendí a desplegar antes
-        de que nadie me lo pidiera.
+        Estudio Ingeniería de Software en SENATI y soy autodidacta: aprendí a
+        desplegar antes de que nadie me lo pidiera.
       </p>
 
       <ol className="relative space-y-10 md:space-y-16">
@@ -59,14 +109,7 @@ export function Trayectoria() {
           const isLeft = i % 2 === 0;
 
           return (
-            <Reveal
-              key={milestone.id}
-              as="li"
-              className="relative pl-14 md:pl-0"
-              y={20}
-              amount={0.3}
-              delay={i * STAGGER}
-            >
+            <MilestoneShell key={milestone.id} index={i}>
               {/* Eje: a la izquierda en movil, al centro a partir de 768px. */}
               <span
                 aria-hidden="true"
@@ -78,6 +121,7 @@ export function Trayectoria() {
                   className="h-full w-full"
                   strokeWidth={3.2}
                   delay={i * 0.05}
+                  scrub={{ range: AXIS_DRAW, over: "reach" }}
                 />
               </span>
 
@@ -85,37 +129,52 @@ export function Trayectoria() {
                   nunca lleva texto (el oro sobre papel da 1.53:1). Estatico a
                   proposito — el presupuesto de movimiento del hito ya se lo
                   llevan el trazo y la entrada del panel. */}
-              <span
-                aria-hidden="true"
-                className="absolute left-2 top-9 h-3.5 w-3.5 -translate-x-1/2 rotate-45 border-2 border-[var(--g-structure)] bg-kin md:left-1/2"
-              />
+              <ScrubStamp
+                range={NODE_STAMP}
+                over="reach"
+                className="absolute left-2 top-9 h-3.5 w-3.5 -translate-x-1/2 md:left-1/2"
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-full w-full rotate-45 border-2 border-[var(--g-structure)] bg-kin"
+                />
+              </ScrubStamp>
 
               <div
                 className={`relative ${isLeft ? "md:w-[calc(50%-2.75rem)]" : "md:ml-auto md:w-[calc(50%-2.75rem)]"}`}
               >
                 {/* La onomatopeya se queda DENTRO del ancho del panel para no
                     invadir el eje cuando el hito cae a la izquierda. */}
-                <Sfx
-                  rotate={isLeft ? -8 : 7}
+                <ScrubStamp
+                  range={SFX_STAMP}
+                  over="reach"
                   className="absolute -top-7 right-3 z-20"
                 >
-                  {milestone.pow}
-                </Sfx>
+                  <Sfx rotate={isLeft ? -8 : 7}>{milestone.pow}</Sfx>
+                </ScrubStamp>
 
-                <InkPanel rotate={isLeft ? -1 : 1} caption={milestone.badge}>
-                  <p className="font-mono text-caption uppercase text-on-koma-faint">
-                    {milestone.period}
-                  </p>
-                  <h3 className="mt-1 font-poster text-h3 uppercase text-on-koma">
-                    {milestone.org}
-                  </h3>
-                  <p className="font-mono text-small font-bold text-[var(--g-accent)]">
-                    {milestone.role}
-                  </p>
-                  <p className="mt-2 text-body text-on-koma-muted">{milestone.body}</p>
-                </InkPanel>
+                <ScrubReveal
+                  range={PANEL_REVEAL}
+                  over="reach"
+                  distance={PANEL_RISE_PX}
+                >
+                  <InkPanel rotate={isLeft ? -1 : 1} caption={milestone.badge}>
+                    <p className="font-mono text-caption uppercase text-on-koma-faint">
+                      {milestone.period}
+                    </p>
+                    <h3 className="mt-1 font-poster text-h3 uppercase text-on-koma">
+                      {milestone.org}
+                    </h3>
+                    <p className="font-mono text-small font-bold text-[var(--g-accent)]">
+                      {milestone.role}
+                    </p>
+                    <p className="mt-2 text-body text-on-koma-muted">
+                      {milestone.body}
+                    </p>
+                  </InkPanel>
+                </ScrubReveal>
               </div>
-            </Reveal>
+            </MilestoneShell>
           );
         })}
       </ol>

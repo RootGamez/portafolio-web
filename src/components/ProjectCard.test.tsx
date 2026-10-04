@@ -146,6 +146,7 @@ function deckStage(patch: Partial<StageContextValue>): StageContextValue {
     isNear: true,
     progress: motionValue(0),
     intro: motionValue(0),
+    reading: motionValue(0),
     ...patch,
   };
 }

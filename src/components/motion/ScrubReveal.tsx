@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { motion, useMotionValue, useTransform } from "motion/react";
-import { useStage } from "@/components/stage/StageContext";
+import { motion, useTransform } from "motion/react";
+import { useFocusHold } from "@/hooks/useFocusHold";
 import { SCRUB_REVEAL_DISTANCE_PX } from "@/lib/stage/config";
 import { revealFrame, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
+import { useScrubSource } from "./useScrubSource";
 
 /** Etiquetas que de verdad se usan como envoltorio de revelado. */
 type ScrubTag = "div" | "li" | "span";
@@ -48,9 +49,8 @@ export function ScrubReveal({
   as = "div",
   className = "",
 }: Props) {
-  const { mode, progress: stageProgress, intro } = useStage();
-  const progress = over === "intro" ? intro : stageProgress;
-  const focused = useMotionValue(false);
+  const { mode, source: progress } = useScrubSource(over);
+  const { focused, onFocus, onBlur } = useFocusHold();
   const opacity = useTransform(() =>
     focused.get() ? 1 : revealFrame(progress.get(), range, distance).opacity,
   );
@@ -63,8 +63,8 @@ export function ScrubReveal({
     <Component
       className={className}
       style={{ opacity, y }}
-      onFocus={() => focused.set(true)}
-      onBlur={() => focused.set(false)}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       {children}
     </Component>

@@ -7,13 +7,13 @@ import { Hero } from "./Hero";
 function renderHeroInDeck() {
   const progress = motionValue(0);
   const intro = motionValue(0);
-  const stage: StageContextValue = { mode: "deck", index: 0, isActive: true, isNear: true, progress, intro };
+  const stage: StageContextValue = { mode: "deck", index: 0, isActive: true, isNear: true, progress, intro, reading: motionValue(0) };
   const utils = render(
     <StageContext value={stage}>
       <Hero />
     </StageContext>,
   );
-  return { ...utils, progress, intro };
+  return { ...utils, progress, intro, reading: motionValue(0) };
 }
 
 const ring = (container: HTMLElement) => container.querySelector("[data-enso-ring] path");

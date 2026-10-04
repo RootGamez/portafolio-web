@@ -1,6 +1,6 @@
 import { motion, useTransform } from "motion/react";
-import { useStage } from "@/components/stage/StageContext";
 import { drawFrame, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
+import { useScrubSource } from "./useScrubSource";
 
 type Props = {
   /** Tramo (0..1) en el que se dibuja. Se lee al montar. */
@@ -24,8 +24,7 @@ type Props = {
  * animacion.
  */
 export function ScrubDraw({ range, over = "intro", ...pathProps }: Props) {
-  const { mode, progress: stageProgress, intro } = useStage();
-  const progress = over === "intro" ? intro : stageProgress;
+  const { mode, source: progress } = useScrubSource(over);
   const pathLength = useTransform(() => drawFrame(progress.get(), range).pathLength);
   const opacity = useTransform(() => drawFrame(progress.get(), range).opacity);
 

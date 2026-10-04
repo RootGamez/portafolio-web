@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { motion, useMotionValue, useTransform } from "motion/react";
-import { useStage } from "@/components/stage/StageContext";
+import { motion, useTransform } from "motion/react";
+import { useFocusHold } from "@/hooks/useFocusHold";
 import { eraseMask, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
+import { useScrubSource } from "./useScrubSource";
 
 type Props = {
   readonly children: ReactNode;
@@ -22,9 +23,8 @@ type Props = {
  * 2.4.7). En modo lineal no lleva mascara.
  */
 export function ScrubErase({ children, range, over = "intro", className = "" }: Props) {
-  const { mode, progress: stageProgress, intro } = useStage();
-  const progress = over === "intro" ? intro : stageProgress;
-  const focused = useMotionValue(false);
+  const { mode, source: progress } = useScrubSource(over);
+  const { focused, onFocus, onBlur } = useFocusHold();
   const maskImage = useTransform(() => (focused.get() ? "none" : eraseMask(progress.get(), range)));
 
   if (mode === "linear") return <div className={className}>{children}</div>;
@@ -33,8 +33,8 @@ export function ScrubErase({ children, range, over = "intro", className = "" }: 
     <motion.div
       className={className}
       style={{ maskImage }}
-      onFocus={() => focused.set(true)}
-      onBlur={() => focused.set(false)}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       {children}
     </motion.div>

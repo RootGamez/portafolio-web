@@ -14,6 +14,7 @@ describe("useStage", () => {
     // Progreso 1 = todo en su estado final: la ley "todo arranca visible".
     expect(result.current.progress.get()).toBe(1);
     expect(result.current.intro.get()).toBe(1);
+    expect(result.current.reading.get()).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("el valor por defecto es siempre el mismo objeto (no se recrea por render)", () => {
@@ -31,6 +32,7 @@ describe("useStage", () => {
       isNear: true,
       progress: motionValue(0.25),
       intro: motionValue(0.5),
+      reading: motionValue(120),
     };
     const wrapper = ({ children }: { children: ReactNode }) => (
       <StageContext value={value}>{children}</StageContext>

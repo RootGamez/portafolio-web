@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCRUB_DRAW_MIN_VISIBLE, SCRUB_ERASE_FEATHER_PCT } from "./config";
-import { drawFrame, eraseMask, parallaxY, revealFrame, scrubT } from "./scrub";
+import { drawFrame, eraseMask, parallaxY, reachProgress, revealFrame, scrubT, stampFrame } from "./scrub";
 
 describe("scrubT: avance lineal 0..1 dentro de un tramo del progreso del escenario", () => {
   it("vale 0 antes del tramo, 1 despues y es lineal dentro", () => {
@@ -113,5 +113,48 @@ describe("eraseMask: la tinta se retira de izquierda a derecha con un borde difu
       expect(to - from).toBeCloseTo(F);
       previous = from;
     }
+  });
+});
+
+describe("stampFrame: un sello que cae, golpea y se asienta", () => {
+  it("antes del tramo no se ve y esta grande (en el aire); al acabar, visible y a tamano real", () => {
+    expect(stampFrame(0, [0.4, 0.6], 1.6)).toEqual({ opacity: 0, scale: 1.6 });
+    expect(stampFrame(1, [0.4, 0.6], 1.6)).toEqual({ opacity: 1, scale: 1 });
+  });
+
+  it("aparece deprisa: ya es opaco antes de la mitad del tramo (el golpe se ve entero)", () => {
+    expect(stampFrame(0.5, [0.4, 0.6], 1.6).opacity).toBe(1);
+  });
+
+  it("el golpe: en algun momento se queda POR DEBAJO de su tamano y luego vuelve a 1", () => {
+    const scales = Array.from({ length: 41 }, (_, i) => stampFrame(0.4 + (0.2 * i) / 40, [0.4, 0.6], 1.6).scale);
+    const lowest = Math.min(...scales);
+    expect(lowest).toBeLessThan(1);
+    expect(lowest).toBeGreaterThan(0.85);
+    expect(scales.at(-1)).toBe(1);
+  });
+
+  it("es reversible: el mismo progreso da siempre el mismo fotograma", () => {
+    expect(stampFrame(0.47, [0.4, 0.6], 1.6)).toEqual(stampFrame(0.47, [0.4, 0.6], 1.6));
+  });
+});
+
+describe("reachProgress: cuanto ha cruzado la linea de lectura a un elemento", () => {
+  it("0 hasta que la linea llega a su borde de arriba, 1 cuando pasa su borde de abajo, lineal entre medias", () => {
+    expect(reachProgress(100, 200, 400)).toBe(0);
+    expect(reachProgress(200, 200, 400)).toBe(0);
+    expect(reachProgress(400, 200, 400)).toBe(0.5);
+    expect(reachProgress(600, 200, 400)).toBe(1);
+    expect(reachProgress(5000, 200, 400)).toBe(1);
+  });
+
+  it("un elemento sin alto es un escalon en su borde; una lectura infinita (modo lineal) lo da por leido", () => {
+    expect(reachProgress(199, 200, 0)).toBe(0);
+    expect(reachProgress(200, 200, 0)).toBe(1);
+    expect(reachProgress(Number.POSITIVE_INFINITY, 200, 400)).toBe(1);
+  });
+
+  it("una lectura NaN cuenta como no leido", () => {
+    expect(reachProgress(Number.NaN, 200, 400)).toBe(0);
   });
 });

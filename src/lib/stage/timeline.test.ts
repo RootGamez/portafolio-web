@@ -6,6 +6,7 @@ import {
   EMPTY_LAYOUT,
   introProgress,
   locate,
+  readingLine,
   offsetOfStage,
   panFor,
   scrollForPan,
@@ -356,6 +357,59 @@ describe("introProgress: avance 0..1 dentro de la INTRO del escenario (donde ocu
     expect(introProgress(layout, 9, 100)).toBe(0);
     expect(introProgress(EMPTY_LAYOUT, 0, 100)).toBe(0);
     expect(introProgress(layout, 1, Number.NaN)).toBe(0);
+  });
+});
+
+describe("readingLine: la linea de lectura, en px del CONTENIDO del escenario", () => {
+  // E1: start 1280, intro 480 (1280..1760), pan 600 (1760..2360), contenido 1400,
+  // visor 800. Con la linea de 0,25 a 0,75: arranca en 200, baja hasta 600 en la
+  // intro y, durante el pan, del 75 % del visor a su borde: 600 → 1400 (todo leido).
+  const read = (scroll: number, index = 1, of = layout) => readingLine(of, index, scroll, 0.25, 0.75);
+
+  it("antes del escenario ya esta en su arranque (sin saltos al destaparse la tinta)", () => {
+    expect(read(100)).toBe(200);
+    expect(read(1280)).toBe(200);
+  });
+
+  it("durante la intro baja en linea recta del arranque a la linea", () => {
+    expect(read(1280 + 240)).toBe(400);
+    expect(read(1760)).toBe(600);
+  });
+
+  it("durante el pan llega hasta el FONDO del contenido: al acabar el escenario todo esta leido", () => {
+    expect(read(1760 + 300)).toBe(1000);
+    expect(read(2360)).toBe(1400);
+    expect(read(3000)).toBe(1400);
+  });
+
+  it("si el escenario cabe pero baja de la linea, la intro llega hasta el fondo del contenido", () => {
+    const tall = buildLayout([{ contentHeight: 760 }], VIEWPORT); // cabe (760 < 800), pasa de 600
+    expect(readingLine(tall, 0, tall.stages[0].end, 0.25, 0.75)).toBe(760);
+  });
+
+  it("si el escenario es corto, la intro llega a la linea (no se queda en su fondo)", () => {
+    const short = buildLayout([{ contentHeight: 300 }], VIEWPORT);
+    expect(readingLine(short, 0, short.stages[0].end, 0.25, 0.75)).toBe(600);
+  });
+
+  it("es continua y monotona en todo el escenario", () => {
+    let previous = 0;
+    for (let s = 1200; s <= 2400; s += 10) {
+      const r = read(s);
+      expect(r).toBeGreaterThanOrEqual(previous);
+      expect(r - (previous || r)).toBeLessThanOrEqual(15);
+      previous = r;
+    }
+  });
+
+  it("sin intro, la linea arranca ya en su sitio", () => {
+    const noIntro = buildLayout([{ contentHeight: 1400, introScreens: 0 }], VIEWPORT);
+    expect(readingLine(noIntro, 0, 0, 0.25, 0.75)).toBe(600);
+  });
+
+  it("un indice inexistente da 0; un scroll no finito, el arranque", () => {
+    expect(read(100, 9)).toBe(0);
+    expect(read(Number.NaN)).toBe(200);
   });
 });
 

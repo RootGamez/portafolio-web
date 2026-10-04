@@ -1,6 +1,14 @@
 import { useMemo, type ReactNode, type Ref } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
-import { introProgress, layerOpacity, panFor, stageProgress, type Layout } from "@/lib/stage/timeline";
+import { READING_LINE_RATIO, READING_LINE_START } from "@/lib/stage/config";
+import {
+  introProgress,
+  layerOpacity,
+  panFor,
+  readingLine,
+  stageProgress,
+  type Layout,
+} from "@/lib/stage/timeline";
 import { StageContext, type StageContextValue } from "./StageContext";
 
 type Props = {
@@ -58,10 +66,13 @@ export function StageLayer({
   );
   const progress = useTransform(() => stageProgress(layout.get(), index, scrollOffset.get()));
   const intro = useTransform(() => introProgress(layout.get(), index, scrollOffset.get()));
+  const reading = useTransform(() =>
+    readingLine(layout.get(), index, scrollOffset.get(), READING_LINE_START, READING_LINE_RATIO),
+  );
 
   const stage = useMemo<StageContextValue>(
-    () => ({ mode: "deck", index, isActive, isNear, progress, intro }),
-    [index, isActive, isNear, progress, intro],
+    () => ({ mode: "deck", index, isActive, isNear, progress, intro, reading }),
+    [index, isActive, isNear, progress, intro, reading],
   );
 
   return (

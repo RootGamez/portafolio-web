@@ -27,6 +27,12 @@ export type StageContextValue = {
    * lineal vale 1.
    */
   readonly intro: MotionValue<number>;
+  /**
+   * La linea de lectura del escenario, en px de su contenido (ver
+   * `readingLine`): hasta donde ha llegado el usuario. La usa `ScrubReach`. En
+   * modo lineal es infinita: todo esta leido.
+   */
+  readonly reading: MotionValue<number>;
 };
 
 /**
@@ -44,6 +50,7 @@ export const LINEAR_STAGE: StageContextValue = {
   isNear: true,
   progress: motionValue(1),
   intro: motionValue(1),
+  reading: motionValue(Number.POSITIVE_INFINITY),
 };
 
 export const StageContext = createContext<StageContextValue>(LINEAR_STAGE);

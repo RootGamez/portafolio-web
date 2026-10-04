@@ -40,6 +40,8 @@ export type StageSegment = {
   readonly start: number;
   readonly introLength: number;
   readonly panLength: number;
+  /** Alto del contenido, en px (el de la spec, redondeado). */
+  readonly contentLength: number;
   /** introLength + panLength. */
   readonly length: number;
   readonly end: number;
@@ -136,10 +138,11 @@ export function buildLayout(
   specs.forEach((spec, index) => {
     const introScreens = finiteOr(spec.introScreens ?? DEFAULT_INTRO_SCREENS, DEFAULT_INTRO_SCREENS);
     const introLength = Math.max(0, Math.round(introScreens * vh));
-    const panLength = Math.max(0, Math.round(finiteOr(spec.contentHeight, 0)) - vh);
+    const contentLength = Math.max(0, Math.round(finiteOr(spec.contentHeight, 0)));
+    const panLength = Math.max(0, contentLength - vh);
     const length = introLength + panLength;
 
-    stages.push({ start: cursor, introLength, panLength, length, end: cursor + length });
+    stages.push({ start: cursor, introLength, panLength, contentLength, length, end: cursor + length });
     cursor += length;
 
     if (index < specs.length - 1) {
@@ -247,6 +250,40 @@ export function stageProgress(layout: Layout, index: number, scroll: number): nu
   const s = finiteOr(scroll, 0);
   if (stage.length === 0) return s >= stage.start ? 1 : 0;
   return clamp((s - stage.start) / stage.length, 0, 1);
+}
+
+/**
+ * La LINEA DE LECTURA de un escenario, en px de su CONTENIDO (0 = su borde de
+ * arriba): hasta donde ha "llegado" el usuario. Sirve para que cada elemento se
+ * anime AL ALCANZARLO (Fase 4, `ScrubReach`), igual en cualquier alto de pantalla.
+ *
+ *   - antes del escenario esta en su arranque (`startRatio * visor`): lo que hay
+ *     por encima ya cuenta como leido y no aparece de golpe al destaparse la tinta;
+ *   - durante la intro baja en linea recta hasta `lineRatio * visor` (o hasta el
+ *     fondo del contenido, si el escenario cabe pero pasa de la linea);
+ *   - durante el pan el contenido sube y la linea baja a la vez, del
+ *     `lineRatio` del visor a su borde: al acabar el escenario TODO esta leido
+ *     (con la linea quieta, lo ultimo nunca se completaria).
+ */
+export function readingLine(
+  layout: Layout,
+  index: number,
+  scroll: number,
+  startRatio: number,
+  lineRatio: number,
+): number {
+  const stage: StageSegment | undefined = layout.stages[index];
+  if (!stage) return 0;
+  const vh = layout.viewportHeight;
+  const start = startRatio * vh;
+  const line = lineRatio * vh;
+  const introEnd = stage.panLength > 0 ? line : Math.max(line, stage.contentLength);
+  const s = finiteOr(scroll, Number.NEGATIVE_INFINITY) - stage.start;
+  if (s < 0) return start;
+  if (s < stage.introLength) return start + ((introEnd - start) * s) / stage.introLength;
+  if (stage.panLength === 0) return introEnd;
+  const panT = clamp((s - stage.introLength) / stage.panLength, 0, 1);
+  return line + (stage.contentLength - line) * panT;
 }
 
 /**

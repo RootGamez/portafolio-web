@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { motion, useTransform } from "motion/react";
-import { useStage } from "@/components/stage/StageContext";
 import { parallaxY, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
+import { useScrubSource } from "./useScrubSource";
 
 /** El escenario entero: de que empieza hasta que se va. */
 const WHOLE_STAGE: ScrubRange = [0, 1];
@@ -31,8 +31,7 @@ export function ScrubParallax({
   over = "stage",
   className = "",
 }: Props) {
-  const { mode, progress: stageProgress, intro } = useStage();
-  const progress = over === "intro" ? intro : stageProgress;
+  const { mode, source: progress } = useScrubSource(over);
   const y = useTransform(() => parallaxY(progress.get(), range, distance));
 
   if (mode === "linear") return <div className={className}>{children}</div>;

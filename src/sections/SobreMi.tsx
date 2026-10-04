@@ -4,6 +4,9 @@ import { Fukidashi } from "@/components/ink/Fukidashi";
 import { InkPanel } from "@/components/ink/InkPanel";
 import { InkButton } from "@/components/ink/InkButton";
 import { Sfx } from "@/components/ink/Sfx";
+import { ScrubReveal } from "@/components/motion/ScrubReveal";
+import { ScrubStamp } from "@/components/motion/ScrubStamp";
+import type { ScrubRange } from "@/lib/stage/scrub";
 import { getSectionMeta } from "@/sections/meta";
 
 /**
@@ -28,6 +31,24 @@ import { getSectionMeta } from "@/sections/meta";
     la seccion y para el riel de navegacion. */
 const META = getSectionMeta("sobre-mi");
 
+/*
+ * Coreografia del modo escenarios (Fase 4.2), sobre la INTRO del escenario
+ * (STAGE_TIMING["sobre-mi"]). Se lee como una plancha: primero el globo, luego
+ * la vineta que sube a pisarlo, la onomatopeya REVIENTA cuando la vineta se
+ * asienta y los botones caen de uno en uno. En modo lineal todo esta quieto.
+ *
+ *   globo 0 ─ 0,22 · panel 0,15 ─ 0,42 · ¡POW! 0,42 ─ 0,55
+ *   botones 0,55 ─ 0,68 / 0,62 ─ 0,75 / 0,69 ─ 0,82 · pausa hasta 1
+ */
+const BALLOON: ScrubRange = [0, 0.22];
+const PANEL: ScrubRange = [0.15, 0.42];
+const SFX_STAMP: ScrubRange = [0.42, 0.55];
+const BUTTONS: readonly ScrubRange[] = [
+  [0.55, 0.68],
+  [0.62, 0.75],
+  [0.69, 0.82],
+];
+
 export function SobreMi() {
   return (
     <Section
@@ -42,11 +63,13 @@ export function SobreMi() {
         {/* Fila 1 — el globo, mordiendo la mitad izquierda. z-20 para quedar
             SIEMPRE por encima del koma que sube a pisarlo. */}
         <div className="relative z-20 md:col-span-8 md:col-start-1">
-          <Fukidashi>
-            <p className="font-semibold">
-              «De la idea al despliegue — y del despliegue al mantenimiento.»
-            </p>
-          </Fukidashi>
+          <ScrubReveal range={BALLOON}>
+            <Fukidashi>
+              <p className="font-semibold">
+                «De la idea al despliegue — y del despliegue al mantenimiento.»
+              </p>
+            </Fukidashi>
+          </ScrubReveal>
         </div>
 
         {/* La onomatopeya ocupa el hueco muerto a la derecha del globo.
@@ -62,42 +85,52 @@ export function SobreMi() {
             encima de la vineta — que es como se comporta en una plancha
             impresa, nunca por detras. */}
         <div className="hidden md:col-span-4 md:col-start-9 md:row-start-1 md:z-30 md:flex md:items-start md:justify-end md:pt-1">
-          <Sfx kana="ドン" rotate={-8}>
-            ¡POW!
-          </Sfx>
+          <ScrubStamp range={SFX_STAMP}>
+            <Sfx kana="ドン" rotate={-8}>
+              ¡POW!
+            </Sfx>
+          </ScrubStamp>
         </div>
 
         {/* Fila 2 — el koma, desplazado a la derecha y solapado hacia arriba. */}
         <div className="koma-overlap-up relative z-10 md:col-span-9 md:col-start-4 md:row-start-2">
-          <InkPanel rotate={1} tone="fine" toneFade className="md:pt-10">
-            <p className="text-body text-on-koma-muted">
-              Soy desarrollador Full Stack (React + Django) y{" "}
-              <strong className="text-on-koma">
-                lidero el equipo de desarrollo en Screen IA
-              </strong>
-              . Diseño, construyo, despliego y mantengo software real en producción — no solo
-              demos.
-            </p>
-          </InkPanel>
+          <ScrubReveal range={PANEL} distance={40}>
+            <InkPanel rotate={1} tone="fine" toneFade className="md:pt-10">
+              <p className="text-body text-on-koma-muted">
+                Soy desarrollador Full Stack (React + Django) y{" "}
+                <strong className="text-on-koma">
+                  lidero el equipo de desarrollo en Screen IA
+                </strong>
+                . Diseño, construyo, despliego y mantengo software real en producción — no solo
+                demos.
+              </p>
+            </InkPanel>
+          </ScrubReveal>
         </div>
 
         {/* Fila 3 — acciones, alineadas con el borde izquierdo del koma. */}
         <div className="flex flex-wrap gap-3 sm:gap-4 md:col-span-9 md:col-start-4 md:row-start-3 md:mt-8">
-          <InkButton variant="primary" href="#proyectos">
-            Ver mis proyectos
-          </InkButton>
-          <InkButton
-            variant="accent"
-            href="/cv/CV-Anthony-Gamez.pdf"
-            download
-            ariaLabel="Descargar el currículum de Anthony Gámez en PDF"
-          >
-            <FileDown size={18} strokeWidth={3} aria-hidden="true" />
-            Mi CV
-          </InkButton>
-          <InkButton variant="ghost" href="#contacto">
-            Hablemos
-          </InkButton>
+          <ScrubReveal range={BUTTONS[0]}>
+            <InkButton variant="primary" href="#proyectos">
+              Ver mis proyectos
+            </InkButton>
+          </ScrubReveal>
+          <ScrubReveal range={BUTTONS[1]}>
+            <InkButton
+              variant="accent"
+              href="/cv/CV-Anthony-Gamez.pdf"
+              download
+              ariaLabel="Descargar el currículum de Anthony Gámez en PDF"
+            >
+              <FileDown size={18} strokeWidth={3} aria-hidden="true" />
+              Mi CV
+            </InkButton>
+          </ScrubReveal>
+          <ScrubReveal range={BUTTONS[2]}>
+            <InkButton variant="ghost" href="#contacto">
+              Hablemos
+            </InkButton>
+          </ScrubReveal>
         </div>
       </div>
     </Section>

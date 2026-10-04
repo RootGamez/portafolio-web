@@ -5,6 +5,7 @@ import type { MotionValue } from "motion/react";
 import { DeckProvider, useDeck } from "./DeckContext";
 import { StageDeck } from "./StageDeck";
 import { useStage } from "./StageContext";
+import { READING_LINE_RATIO, READING_LINE_START } from "@/lib/stage/config";
 import { Scene, STAGES, stubStageGeometry } from "@/test/stageGeometry";
 import { elementsUnderResizeObservation, triggerResize } from "@/test/setup";
 import stageDeckSource from "./StageDeck.tsx?raw";
@@ -109,6 +110,42 @@ describe("StageDeck", () => {
     await waitFor(() => expect(intro!.get()).toBeCloseTo(0.5));
     setScrollY(2000);
     await waitFor(() => expect(intro!.get()).toBe(1));
+  });
+
+  it("cada escenario expone su LINEA DE LECTURA (`reading`, px del contenido)", async () => {
+    let reading: MotionValue<number> | null = null;
+    function ReadingProbe() {
+      reading = useStage().reading;
+      return null;
+    }
+    const stages = STAGES.map((stage, index) =>
+      index === 1
+        ? {
+            ...stage,
+            node: (
+              <>
+                <ReadingProbe />
+                <Scene id={stage.slug} height={1400} />
+              </>
+            ),
+          }
+        : stage,
+    );
+    render(
+      <DeckProvider>
+        <StageDeck stages={stages} />
+      </DeckProvider>,
+    );
+
+    // E1: intro 480 desde 1280 y pan 600 (contenido 1400). Antes del escenario
+    // la linea esta en su arranque; al acabar la intro, en la linea; al acabar
+    // el escenario, en el fondo del contenido.
+    setScrollY(100);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(READING_LINE_START * 800));
+    setScrollY(1760);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(READING_LINE_RATIO * 800));
+    setScrollY(2360);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(1400));
   });
 
   it("al principio solo el primer escenario es interactivo: el resto va inert", () => {

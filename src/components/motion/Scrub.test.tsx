@@ -7,14 +7,15 @@ import { ScrubDraw } from "./ScrubDraw";
 import { ScrubErase } from "./ScrubErase";
 import { ScrubParallax } from "./ScrubParallax";
 import { ScrubReveal } from "./ScrubReveal";
+import { ScrubStamp } from "./ScrubStamp";
 
 /** Un escenario del deck con su intro y su progreso controlados a mano (ambos en 0). */
 function renderInDeck(ui: ReactNode) {
   const progress = motionValue(0);
   const intro = motionValue(0);
-  const stage: StageContextValue = { mode: "deck", index: 2, isActive: true, isNear: true, progress, intro };
+  const stage: StageContextValue = { mode: "deck", index: 2, isActive: true, isNear: true, progress, intro, reading: motionValue(0) };
   const utils = render(<StageContext value={stage}>{ui}</StageContext>);
-  return { ...utils, progress, intro };
+  return { ...utils, progress, intro, reading: motionValue(0) };
 }
 
 const PATH = "M0 10 C 40 0, 80 20, 120 10";
@@ -58,6 +59,14 @@ describe("Scrub* en modo lineal: el sitio clasico, sin rastro de animacion", () 
     render(<ScrubParallax distance={60}>foto</ScrubParallax>);
 
     expect(screen.getByText("foto").style.transform).toBe("");
+  });
+
+  it("ScrubStamp pinta su contenido quieto: sin opacidad ni escala", () => {
+    render(<ScrubStamp range={[0, 1]}>POW</ScrubStamp>);
+
+    const node = screen.getByText("POW");
+    expect(node.style.opacity).toBe("");
+    expect(node.style.transform).toBe("");
   });
 
   it("ScrubErase no borra nada: sin mascara", () => {
@@ -156,6 +165,38 @@ describe("ScrubParallax en el deck", () => {
   });
 });
 
+describe("ScrubStamp en el deck", () => {
+  it("antes de su tramo no se ve; al acabarlo esta opaco y a tamano real; al volver, se levanta", async () => {
+    const { intro } = renderInDeck(<ScrubStamp range={[0.4, 0.6]}>POW</ScrubStamp>);
+    const node = screen.getByText("POW");
+    expect(node.style.opacity).toBe("0");
+    expect(node.style.transform).toContain("scale(1.6)");
+
+    act(() => intro.set(1));
+    await waitFor(() => expect(node.style.opacity).toBe("1"));
+    // Motion escribe "none" cuando la transformacion es la identidad.
+    expect(node.style.transform).toBe("none");
+
+    act(() => intro.set(0));
+    await waitFor(() => expect(node.style.opacity).toBe("0"));
+  });
+
+  it("si el teclado enfoca algo dentro, se ve entero y quieto", async () => {
+    renderInDeck(
+      <ScrubStamp range={[0.6, 0.9]}>
+        <a href="#x">Enviar</a>
+      </ScrubStamp>,
+    );
+    const link = screen.getByRole("link", { name: "Enviar" });
+    const wrapper = link.parentElement as HTMLElement;
+
+    act(() => link.focus());
+
+    await waitFor(() => expect(wrapper.style.opacity).toBe("1"));
+    expect(wrapper.style.transform).toBe("none");
+  });
+});
+
 describe("ScrubErase en el deck", () => {
   it("al principio no lleva mascara; al acabar su tramo esta borrado; al volver, reaparece", async () => {
     const { intro } = renderInDeck(<ScrubErase range={[0.5, 0.9]}>Anthony</ScrubErase>);
@@ -194,6 +235,7 @@ describe("rendimiento", () => {
         <ScrubReveal range={[0, 0.5]}>a</ScrubReveal>
         <ScrubParallax distance={40}>b</ScrubParallax>
         <ScrubErase range={[0.5, 1]}>c</ScrubErase>
+        <ScrubStamp range={[0.3, 0.6]}>d</ScrubStamp>
         <svg>
           <ScrubDraw range={[0.2, 0.8]} d={PATH} />
         </svg>

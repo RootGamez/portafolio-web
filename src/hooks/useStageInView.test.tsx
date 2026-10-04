@@ -15,7 +15,7 @@ function Probe({ amount }: { readonly amount?: number }) {
 }
 
 function deckStage(isActive: boolean): StageContextValue {
-  return { mode: "deck", index: 2, isActive, isNear: true, progress: motionValue(0), intro: motionValue(0) };
+  return { mode: "deck", index: 2, isActive, isNear: true, progress: motionValue(0), intro: motionValue(0), reading: motionValue(0) };
 }
 
 describe("useStageInView", () => {
