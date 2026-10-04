@@ -17,8 +17,11 @@ function rect(top: number, height: number): DOMRect {
   return { x: 0, y: top, top, left: 0, right: 0, bottom: top + height, width: 0, height, toJSON: () => ({}) } as DOMRect;
 }
 
+/** Solo SU espia: `vi.restoreAllMocks()` borraria tambien los dobles globales de setup.ts (matchMedia). */
+let rectSpy: ReturnType<typeof vi.spyOn> | null = null;
+
 beforeEach(() => {
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+  rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
     if (this.hasAttribute("data-stage-content")) return rect(0, 3000);
     if (this.tagName === "LI") {
       const index = [...(this.parentElement?.children ?? [])].indexOf(this);
@@ -28,7 +31,7 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => rectSpy?.mockRestore());
 
 function renderInDeck() {
   const reading = motionValue(0);

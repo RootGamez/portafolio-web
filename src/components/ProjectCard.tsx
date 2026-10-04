@@ -4,10 +4,12 @@ import { GithubIcon } from "@/components/icons/Brand";
 import { SealBadge } from "@/components/ink/SealBadge";
 import { Screentone } from "@/components/ink/Screentone";
 import { Sfx } from "@/components/ink/Sfx";
+import { useReached } from "@/components/motion/useReached";
 import { useStage } from "@/components/stage/StageContext";
 import type { Project } from "@/data/projects";
 import { useInViewVideo } from "@/hooks/useInViewVideo";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { CARD_VIDEO_READY_REACH } from "@/lib/stage/config";
 
 /** Donde cae la media respecto al texto. `start`/`end` solo parten en >=1024px. */
 type MediaSide = "top" | "start" | "end";
@@ -76,6 +78,11 @@ const LINK_BASE =
  *      tab-stop artificial: el foco burbujea desde sus propios enlaces.
  *   3. tactil (sin hover)     -> useInViewVideo, por visibilidad
  *   4. prefers-reduced-motion -> no se reproduce nada, se queda el poster.
+ *
+ * En una escena larga del modo escenarios (`ScrubReach`, Fase 4.4) la tarjeta
+ * entra con el scroll: hasta que ha ENTRADO (`CARD_VIDEO_READY_REACH`) ni el
+ * camino tactil ni el hover la ponen en marcha, porque aun no se ve. El foco
+ * de teclado si: la propia entrada la muestra mientras tenga el foco.
  */
 export function ProjectCard({
   project,
@@ -112,7 +119,13 @@ export function ProjectCard({
   // umbral de visibilidad; aqui solo se le dice si hay video que mirar. Y solo
   // el del escenario ACTIVO: el IntersectionObserver da por visible hasta lo
   // que esta en una capa oculta.
-  useInViewVideo(videoRef, Boolean(project.media) && isActive);
+  const reached = useReached(CARD_VIDEO_READY_REACH);
+  useInViewVideo(videoRef, Boolean(project.media) && isActive && reached);
+
+  // Si se vuelve atras y la tarjeta deja de estar entrada, se para.
+  useEffect(() => {
+    if (!reached) videoRef.current?.pause();
+  }, [reached]);
 
   // Si el escenario deja de ser el activo, el hover y el foco de esta tarjeta ya
   // no cuentan (su capa pasa a inert y puede que nunca llegue el mouseleave):
@@ -140,7 +153,7 @@ export function ProjectCard({
     const video = videoRef.current;
     if (!video || reduced) return;
 
-    if (hovering.current || focused.current) {
+    if (focused.current || (hovering.current && reached)) {
       void video.play().catch(() => {
         // Autoplay bloqueado por el navegador: se queda el poster. No rompe nada.
       });

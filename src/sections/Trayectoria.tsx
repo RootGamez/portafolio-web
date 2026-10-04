@@ -1,13 +1,10 @@
-import type { ReactNode } from "react";
 import { Section } from "@/components/layout/Section";
 import { BrushStroke } from "@/components/ink/BrushStroke";
 import { InkPanel } from "@/components/ink/InkPanel";
 import { Sfx } from "@/components/ink/Sfx";
-import { Reveal } from "@/components/motion/Reveal";
-import { ScrubReach } from "@/components/motion/ScrubReach";
+import { ReachItem } from "@/components/motion/ReachItem";
 import { ScrubReveal } from "@/components/motion/ScrubReveal";
 import { ScrubStamp } from "@/components/motion/ScrubStamp";
-import { useStage } from "@/components/stage/StageContext";
 import { timeline } from "@/data/timeline";
 import { STAGGER } from "@/lib/motion";
 import type { ScrubRange } from "@/lib/stage/scrub";
@@ -60,34 +57,6 @@ const PANEL_REVEAL: ScrubRange = [0.08, 0.42];
 const PANEL_RISE_PX = 32;
 const SFX_STAMP: ScrubRange = [0.36, 0.5];
 
-type MilestoneShellProps = {
-  readonly index: number;
-  readonly children: ReactNode;
-};
-
-/** El `li` de un hito: en el deck se mide para la lectura; en lineal entra por tiempo. */
-function MilestoneShell({ index, children }: MilestoneShellProps) {
-  const { mode } = useStage();
-  if (mode === "deck") {
-    return (
-      <ScrubReach as="li" className="relative pl-14 md:pl-0">
-        {children}
-      </ScrubReach>
-    );
-  }
-  return (
-    <Reveal
-      as="li"
-      className="relative pl-14 md:pl-0"
-      y={20}
-      amount={0.3}
-      delay={index * STAGGER}
-    >
-      {children}
-    </Reveal>
-  );
-}
-
 export function Trayectoria() {
   return (
     <Section
@@ -109,7 +78,14 @@ export function Trayectoria() {
           const isLeft = i % 2 === 0;
 
           return (
-            <MilestoneShell key={milestone.id} index={i}>
+            <ReachItem
+              key={milestone.id}
+              as="li"
+              className="relative pl-14 md:pl-0"
+              y={20}
+              amount={0.3}
+              delay={i * STAGGER}
+            >
               {/* Eje: a la izquierda en movil, al centro a partir de 768px. */}
               <span
                 aria-hidden="true"
@@ -174,7 +150,7 @@ export function Trayectoria() {
                   </InkPanel>
                 </ScrubReveal>
               </div>
-            </MilestoneShell>
+            </ReachItem>
           );
         })}
       </ol>

@@ -31,6 +31,7 @@ export const STAGE_TIMING: Readonly<Record<string, StageTiming>> = {
   inicio: { introScreens: 1.5 },
   "sobre-mi": { introScreens: 1.4 },
   trayectoria: { introScreens: 1.2 },
+  proyectos: { introScreens: 1 },
 };
 
 /** Fin de la fase "cubrir" de una transicion (fraccion 0..1 de la transicion). */
@@ -165,6 +166,15 @@ export const SCRUB_STAMP_OVERSHOOT = 1.70158;
  */
 export const READING_LINE_START = 0.3;
 export const READING_LINE_RATIO = 0.8;
+
+/**
+ * Alcance (0..1, ver `ScrubReach`) a partir del cual una tarjeta de proyecto ya
+ * ha ENTRADO y su video puede reproducirse. Antes la tarjeta aun es invisible:
+ * con las capas apiladas el `IntersectionObserver` la da "en pantalla" mientras
+ * la tinta destapa el escenario (visto en vivo, 4.4). Es tambien el final de su
+ * tramo de entrada en Proyectos.
+ */
+export const CARD_VIDEO_READY_REACH = 0.3;
 
 /**
  * Cuantos escenarios a cada lado del activo cuentan como "cercanos": ahi se

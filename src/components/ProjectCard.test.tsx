@@ -1,8 +1,10 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { act, render, fireEvent, screen } from "@testing-library/react";
 import { motionValue } from "motion/react";
 import { ProjectCard } from "./ProjectCard";
 import { StageContext, type StageContextValue } from "@/components/stage/StageContext";
+import { ReachContext } from "@/components/motion/useScrubSource";
+import { CARD_VIDEO_READY_REACH } from "@/lib/stage/config";
 import type { Project } from "@/data/projects";
 import { triggerIntersection } from "@/test/setup";
 
@@ -251,4 +253,64 @@ describe("ProjectCard — dentro de un escenario", () => {
 
     expect(inactive.video.play).not.toHaveBeenCalled();
   });
+
+  describe("dentro de un bloque con alcance (ScrubReach, Fase 4.4)", () => {
+    function renderReaching(initialReach: number) {
+      const reach = motionValue(initialReach);
+      const utils = render(
+        <StageContext value={deckStage({ isActive: true })}>
+          <ReachContext value={reach}>
+            <ProjectCard project={PROJECT} />
+          </ReachContext>
+        </StageContext>,
+      );
+      const video = utils.container.querySelector("video") as HTMLVideoElement;
+      return { ...utils, video, reach };
+    }
+
+    it("en tactil NO reproduce mientras la tarjeta no ha entrado, aunque el video este en pantalla", () => {
+      // Visto en vivo: con las capas apiladas el video "esta en pantalla" mientras
+      // la tinta aun destapa el escenario y la tarjeta sigue con opacidad 0.
+      setTouch();
+      const { video } = renderReaching(0);
+
+      try {
+        triggerIntersection(video, true);
+      } catch {
+        // Nadie observa el video todavia: es justo lo esperado.
+      }
+
+      expect(video.play).not.toHaveBeenCalled();
+    });
+
+    it("en tactil reproduce en cuanto la tarjeta ha entrado y esta en pantalla", () => {
+      setTouch();
+      const { video, reach } = renderReaching(0);
+
+      act(() => reach.set(CARD_VIDEO_READY_REACH));
+      triggerIntersection(video, true);
+
+      expect(video.play).toHaveBeenCalled();
+    });
+
+    it("si se vuelve atras y la tarjeta deja de estar entrada, pausa", () => {
+      setTouch();
+      const { video, reach } = renderReaching(1);
+      triggerIntersection(video, true);
+      vi.mocked(video.pause).mockClear();
+
+      act(() => reach.set(0));
+
+      expect(video.pause).toHaveBeenCalled();
+    });
+
+    it("con raton, un hover sobre la tarjeta aun invisible no la pone en marcha", () => {
+      const { video } = renderReaching(0);
+
+      fireEvent.mouseEnter(video.closest("article") as HTMLElement);
+
+      expect(video.play).not.toHaveBeenCalled();
+    });
+  });
 });
+

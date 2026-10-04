@@ -31,7 +31,9 @@ export function ScrubReach({ children, as = "div", className = "" }: Props) {
   const ref = useRef<HTMLElement | null>(null);
   const top = useMotionValue(Number.POSITIVE_INFINITY);
   const height = useMotionValue(0);
-  const reach = useTransform(() => reachProgress(reading.get(), top.get(), height.get()));
+  const reach = useTransform(() =>
+    reachProgress(reading.get(), top.get(), height.get()),
+  );
 
   const measure = useCallback(() => {
     const node = ref.current;
@@ -55,7 +57,11 @@ export function ScrubReach({ children, as = "div", className = "" }: Props) {
   const Tag = as;
   return (
     <ReachContext value={mode === "deck" ? reach : null}>
-      <Tag ref={(node: HTMLElement | null) => void (ref.current = node)} className={className}>
+      <Tag
+        ref={(node: HTMLElement | null) => void (ref.current = node)}
+        className={className}
+        data-reach={mode === "deck" ? "" : undefined}
+      >
         {children}
       </Tag>
     </ReachContext>
