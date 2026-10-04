@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { motion, useTransform } from "motion/react";
 import { useStage } from "@/components/stage/StageContext";
-import { parallaxY, type ScrubRange } from "@/lib/stage/scrub";
+import { parallaxY, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
 
 /** El escenario entero: de que empieza hasta que se va. */
 const WHOLE_STAGE: ScrubRange = [0, 1];
@@ -10,8 +10,10 @@ type Props = {
   readonly children: ReactNode;
   /** Px que sube a lo largo del tramo (negativo: baja). */
   readonly distance: number;
-  /** Tramo del progreso del escenario (0..1). Por defecto, todo el escenario. Se lee al montar. */
+  /** Tramo (0..1). Por defecto, de principio a fin. Se lee al montar. */
   readonly range?: ScrubRange;
+  /** Sobre que avance se mide el tramo. Por defecto el escenario ENTERO (intro + pan). */
+  readonly over?: ScrubOver;
   readonly className?: string;
 };
 
@@ -22,8 +24,15 @@ type Props = {
  *
  * En modo lineal no se desplaza nada.
  */
-export function ScrubParallax({ children, distance, range = WHOLE_STAGE, className = "" }: Props) {
-  const { mode, progress } = useStage();
+export function ScrubParallax({
+  children,
+  distance,
+  range = WHOLE_STAGE,
+  over = "stage",
+  className = "",
+}: Props) {
+  const { mode, progress: stageProgress, intro } = useStage();
+  const progress = over === "intro" ? intro : stageProgress;
   const y = useTransform(() => parallaxY(progress.get(), range, distance));
 
   if (mode === "linear") return <div className={className}>{children}</div>;

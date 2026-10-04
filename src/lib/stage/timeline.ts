@@ -250,6 +250,21 @@ export function stageProgress(layout: Layout, index: number, scroll: number): nu
 }
 
 /**
+ * Avance 0..1 de la INTRO de un escenario: 0 al empezar, 1 al acabar la intro
+ * (y durante todo el pan). La coreografia de cada escena (Fase 4) va aqui y no
+ * sobre `stageProgress`: el pan depende del alto del contenido en cada
+ * dispositivo, la intro no, asi que un tramo cae en el mismo sitio en movil y
+ * en escritorio.
+ */
+export function introProgress(layout: Layout, index: number, scroll: number): number {
+  const stage: StageSegment | undefined = layout.stages[index];
+  if (!stage) return 0;
+  const s = finiteOr(scroll, 0);
+  if (stage.introLength === 0) return s >= stage.start ? 1 : 0;
+  return clamp((s - stage.start) / stage.introLength, 0, 1);
+}
+
+/**
  * Avance 0..1 de la transicion que sale del escenario `index` (la que lo une con
  * el siguiente): 0 antes de empezar, 1 al acabar. 0 si ese indice no tiene
  * transicion. Es el `t` de `locate`, pero para UNA transicion concreta aunque no

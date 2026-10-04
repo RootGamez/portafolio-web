@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SCRUB_DRAW_MIN_VISIBLE } from "./config";
-import { drawFrame, parallaxY, revealFrame, scrubT } from "./scrub";
+import { SCRUB_DRAW_MIN_VISIBLE, SCRUB_ERASE_FEATHER_PCT } from "./config";
+import { drawFrame, eraseMask, parallaxY, revealFrame, scrubT } from "./scrub";
 
 describe("scrubT: avance lineal 0..1 dentro de un tramo del progreso del escenario", () => {
   it("vale 0 antes del tramo, 1 despues y es lineal dentro", () => {
@@ -86,5 +86,32 @@ describe("parallaxY: desplazamiento vertical que crece con el avance", () => {
   it("fuera del tramo se queda quieto en su extremo", () => {
     expect(parallaxY(0.9, [0.2, 0.6], 50)).toBeCloseTo(-50);
     expect(parallaxY(0.1, [0.2, 0.6], 50)).toBe(0);
+  });
+});
+
+describe("eraseMask: la tinta se retira de izquierda a derecha con un borde difuminado", () => {
+  const F = SCRUB_ERASE_FEATHER_PCT;
+  /** Donde acaba la zona ya borrada (transparente) en una mascara. */
+  const erasedUpTo = (mask: string) => Number(/transparent (-?[\d.]+)%/.exec(mask)?.[1]);
+
+  it("antes del tramo no hay mascara: el texto se pinta tal cual, nitido y sin coste", () => {
+    expect(eraseMask(0, [0.2, 0.8])).toBe("none");
+    expect(eraseMask(0.2, [0.2, 0.8])).toBe("none");
+  });
+
+  it("al acabar el tramo esta borrado entero: el borde ya ha salido por la derecha", () => {
+    expect(eraseMask(1, [0.2, 0.8])).toBe(`linear-gradient(to right, transparent 100%, #000 ${100 + F}%)`);
+  });
+
+  it("el borde avanza siempre hacia la derecha y mide siempre lo mismo", () => {
+    let previous = -Infinity;
+    for (let p = 0.25; p <= 0.8; p += 0.05) {
+      const mask = eraseMask(p, [0.2, 0.8]);
+      const from = erasedUpTo(mask);
+      const to = Number(/#000 (-?[\d.]+)%/.exec(mask)?.[1]);
+      expect(from).toBeGreaterThan(previous);
+      expect(to - from).toBeCloseTo(F);
+      previous = from;
+    }
   });
 });

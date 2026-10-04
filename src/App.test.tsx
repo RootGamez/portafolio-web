@@ -3,17 +3,26 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import App from "./App";
 import { sectionsMeta } from "@/sections/meta";
 import { installMatchMedia, restoreCss, stubCssSupports } from "@/test/doubles";
-import { stubStageGeometry } from "@/test/stageGeometry";
+import { DEFAULT_INTRO_SCREENS, STAGE_TIMING } from "@/lib/stage/config";
+import { stubStageGeometry, VISOR } from "@/test/stageGeometry";
 
 /**
  * Integracion de los dos modos. En jsdom no hay layout ni sticky, asi que los
  * escenarios se simulan con la geometria de src/test/stageGeometry.tsx (las
  * secciones reales no tienen `data-height`: miden 0, y cada escenario dura
- * solo su intro de 480px; con un visor de 800px, el escenario i empieza en
- * i * (480 + 800) = i * 1280).
+ * solo su intro; con un visor de 800px y la transicion de 1 visor de los tests,
+ * el escenario i empieza tras las intros y transiciones de los anteriores).
+ * Las intros salen de la MISMA configuracion que usa App (la de "inicio" es
+ * mas larga: STAGE_TIMING).
  */
 const REDUCED = "(prefers-reduced-motion: reduce)";
-const STAGE_START = 1280;
+
+function stageStart(index: number): number {
+  return sectionsMeta.slice(0, index).reduce((start, { slug }) => {
+    const intro = Math.round((STAGE_TIMING[slug]?.introScreens ?? DEFAULT_INTRO_SCREENS) * VISOR);
+    return start + intro + VISOR;
+  }, 0);
+}
 
 const track = () => document.querySelector("[data-stage-track]");
 // Nombre EXACTO: el enlace de salto se llama "Desactivar animaciones de scroll" y una
@@ -112,7 +121,7 @@ describe("App", () => {
       // queda fuera del arbol de accesibilidad.
       expect(current()).toEqual(["#inicio"]);
 
-      setScrollY(2 * STAGE_START); // escenario 2: trayectoria
+      setScrollY(stageStart(2)); // escenario 2: trayectoria
 
       expect(current()).toEqual(["#trayectoria"]);
     });
@@ -122,7 +131,7 @@ describe("App", () => {
       try {
         render(<App />);
 
-        setScrollY(3 * STAGE_START); // escenario 3: proyectos
+        setScrollY(stageStart(3)); // escenario 3: proyectos
         act(() => {
           vi.advanceTimersByTime(400);
         });
@@ -163,7 +172,7 @@ describe("App", () => {
 
     it("al pasar a lineal mantiene al usuario en la seccion que estaba viendo", () => {
       render(<App />);
-      setScrollY(2 * STAGE_START); // trayectoria
+      setScrollY(stageStart(2)); // trayectoria
 
       fireEvent.click(motionButton());
 
@@ -176,19 +185,19 @@ describe("App", () => {
       // escenario inicial (0) en el contexto ANTES de colocarse, y el destino
       // restaurado se pisaba por 0. Por eso el caso de prueba NO es el escenario 0.
       render(<App />);
-      setScrollY(2 * STAGE_START); // trayectoria
+      setScrollY(stageStart(2)); // trayectoria
       fireEvent.click(motionButton()); // a lineal
       vi.mocked(window.scrollTo).mockClear();
 
       fireEvent.click(motionButton()); // de vuelta a escenarios
 
       expect(window.scrollTo).toHaveBeenCalledTimes(1);
-      expect(window.scrollTo).toHaveBeenCalledWith({ top: 2 * STAGE_START, behavior: "auto" });
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: stageStart(2), behavior: "auto" });
     });
 
     it("tras volver a escenarios el riel sigue marcando la seccion restaurada, sin pasar por la primera", () => {
       render(<App />);
-      setScrollY(3 * STAGE_START); // proyectos
+      setScrollY(stageStart(3)); // proyectos
       fireEvent.click(motionButton());
 
       fireEvent.click(motionButton());

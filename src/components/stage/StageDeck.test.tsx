@@ -1,9 +1,11 @@
 import { Profiler } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
+import type { MotionValue } from "motion/react";
 import { DeckProvider, useDeck } from "./DeckContext";
 import { StageDeck } from "./StageDeck";
-import { STAGES, stubStageGeometry } from "@/test/stageGeometry";
+import { useStage } from "./StageContext";
+import { Scene, STAGES, stubStageGeometry } from "@/test/stageGeometry";
 import { elementsUnderResizeObservation, triggerResize } from "@/test/setup";
 import stageDeckSource from "./StageDeck.tsx?raw";
 import stageLayerSource from "./StageLayer.tsx?raw";
@@ -62,6 +64,51 @@ describe("StageDeck", () => {
     renderDeck();
 
     expect(track().style.height).toBe("4440px");
+  });
+
+  it("un escenario puede pedir su propia intro (introScreens): la pista crece justo esa diferencia", () => {
+    // E0 pasa de 0,6 visores de intro (480 px) a 1 visor (800 px): +320.
+    const stages = STAGES.map((stage, index) => (index === 0 ? { ...stage, introScreens: 1 } : stage));
+    render(
+      <DeckProvider>
+        <StageDeck stages={stages} />
+      </DeckProvider>,
+    );
+
+    expect(track().style.height).toBe("4760px");
+  });
+
+  it("cada escenario expone a su contenido el avance de su INTRO (`intro`), 1 durante el pan", async () => {
+    let intro: MotionValue<number> | null = null;
+    function IntroProbe() {
+      intro = useStage().intro;
+      return null;
+    }
+    const stages = STAGES.map((stage, index) =>
+      index === 1
+        ? {
+            ...stage,
+            node: (
+              <>
+                <IntroProbe />
+                <Scene id={stage.slug} height={1400} />
+              </>
+            ),
+          }
+        : stage,
+    );
+    render(
+      <DeckProvider>
+        <StageDeck stages={stages} />
+      </DeckProvider>,
+    );
+
+    // E1 empieza en 1280 con una intro de 480 px.
+    // Motion recalcula los valores derivados en el fotograma: se esperan.
+    setScrollY(1280 + 240);
+    await waitFor(() => expect(intro!.get()).toBeCloseTo(0.5));
+    setScrollY(2000);
+    await waitFor(() => expect(intro!.get()).toBe(1));
   });
 
   it("al principio solo el primer escenario es interactivo: el resto va inert", () => {

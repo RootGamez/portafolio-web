@@ -9,7 +9,7 @@ import { triggerIntersection } from "@/test/setup";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
 function deckStage(isActive: boolean): StageContextValue {
-  return { mode: "deck", index: 1, isActive, isNear: true, progress: motionValue(0) };
+  return { mode: "deck", index: 1, isActive, isNear: true, progress: motionValue(0), intro: motionValue(0) };
 }
 
 const settle = (ms = 120) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));

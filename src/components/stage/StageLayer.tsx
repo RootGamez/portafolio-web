@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode, type Ref } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
-import { layerOpacity, panFor, stageProgress, type Layout } from "@/lib/stage/timeline";
+import { introProgress, layerOpacity, panFor, stageProgress, type Layout } from "@/lib/stage/timeline";
 import { StageContext, type StageContextValue } from "./StageContext";
 
 type Props = {
@@ -57,10 +57,11 @@ export function StageLayer({
     opacity.get() > 0 ? "visible" : "hidden",
   );
   const progress = useTransform(() => stageProgress(layout.get(), index, scrollOffset.get()));
+  const intro = useTransform(() => introProgress(layout.get(), index, scrollOffset.get()));
 
   const stage = useMemo<StageContextValue>(
-    () => ({ mode: "deck", index, isActive, isNear, progress }),
-    [index, isActive, isNear, progress],
+    () => ({ mode: "deck", index, isActive, isNear, progress, intro }),
+    [index, isActive, isNear, progress, intro],
   );
 
   return (

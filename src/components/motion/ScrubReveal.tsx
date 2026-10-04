@@ -2,15 +2,17 @@ import type { ReactNode } from "react";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { useStage } from "@/components/stage/StageContext";
 import { SCRUB_REVEAL_DISTANCE_PX } from "@/lib/stage/config";
-import { revealFrame, type ScrubRange } from "@/lib/stage/scrub";
+import { revealFrame, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
 
 /** Etiquetas que de verdad se usan como envoltorio de revelado. */
 type ScrubTag = "div" | "li" | "span";
 
 type Props = {
   readonly children: ReactNode;
-  /** Tramo del progreso del escenario (0..1) en el que aparece. Se lee al montar. */
+  /** Tramo (0..1) en el que aparece. Se lee al montar. */
   readonly range: ScrubRange;
+  /** Sobre que avance se mide el tramo. Por defecto la intro del escenario. */
+  readonly over?: ScrubOver;
   /** Px que sube al aparecer. */
   readonly distance?: number;
   /** Etiqueta a renderizar. `li` cuando el padre es una lista, o el HTML se rompe. */
@@ -41,11 +43,13 @@ const TAG: Record<ScrubTag, typeof motion.div> = {
 export function ScrubReveal({
   children,
   range,
+  over = "intro",
   distance = SCRUB_REVEAL_DISTANCE_PX,
   as = "div",
   className = "",
 }: Props) {
-  const { mode, progress } = useStage();
+  const { mode, progress: stageProgress, intro } = useStage();
+  const progress = over === "intro" ? intro : stageProgress;
   const focused = useMotionValue(false);
   const opacity = useTransform(() =>
     focused.get() ? 1 : revealFrame(progress.get(), range, distance).opacity,

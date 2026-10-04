@@ -8,6 +8,7 @@ import { StageAnnouncer } from "@/components/stage/StageAnnouncer";
 import { StageDeck, type StageDef } from "@/components/stage/StageDeck";
 import { useRestoreIndex } from "@/components/stage/useRestoreIndex";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
+import { STAGE_TIMING } from "@/lib/stage/config";
 import { jumpToElement } from "@/lib/stage/scroll";
 
 import { Hero } from "@/sections/Hero";
@@ -48,7 +49,7 @@ const SECTION_COMPONENTS: Readonly<Record<string, ComponentType>> = {
 const STAGES: readonly StageDef[] = sectionsMeta.map(({ slug, ground }) => {
   const Component = SECTION_COMPONENTS[slug];
   if (!Component) throw new Error(`App: la seccion "${slug}" de sectionsMeta no tiene componente`);
-  return { slug, ground, node: <Component /> };
+  return { slug, ground, ...STAGE_TIMING[slug], node: <Component /> };
 });
 
 const SLUGS = STAGES.map((stage) => stage.slug);

@@ -20,6 +20,17 @@ export const TRANSITION_SCREENS = 2.5;
  */
 export const DEFAULT_INTRO_SCREENS = 0.6;
 
+/**
+ * Ritmo propio de los escenarios con coreografia (slug de sectionsMeta), Fase 4.
+ * `introScreens`: intro mas larga que la de por defecto, para que la escena se
+ * vea sin prisa (el usuario pidio animaciones lentas, con mucho scroll; ver D6).
+ */
+export type StageTiming = { readonly introScreens?: number };
+
+export const STAGE_TIMING: Readonly<Record<string, StageTiming>> = {
+  inicio: { introScreens: 1.5 },
+};
+
 /** Fin de la fase "cubrir" de una transicion (fraccion 0..1 de la transicion). */
 export const COVER_END = 0.45;
 
@@ -123,6 +134,9 @@ export const SCRUB_DRAW_MIN_VISIBLE = CARD_STROKE_MIN_VISIBLE;
 
 /** Recorrido por defecto, en px, de un elemento que aparece con el scroll (`ScrubReveal`). */
 export const SCRUB_REVEAL_DISTANCE_PX = 24;
+
+/** Ancho, en % del elemento, del borde difuminado con el que se borra un texto (`ScrubErase`). */
+export const SCRUB_ERASE_FEATHER_PCT = 18;
 
 /**
  * Cuantos escenarios a cada lado del activo cuentan como "cercanos": ahi se

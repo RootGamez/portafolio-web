@@ -34,6 +34,12 @@ export type StageDef = {
   readonly node: ReactNode;
   /** Suelo del escenario: la pista lo pinta mientras es el activo. */
   readonly ground?: Ground;
+  /**
+   * Largo de su intro en alturas de visor (por defecto DEFAULT_INTRO_SCREENS):
+   * el recorrido de scroll donde ocurre su coreografia antes de que el
+   * contenido empiece a subir.
+   */
+  readonly introScreens?: number;
 };
 
 type Props = {
@@ -104,6 +110,13 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
   // inicial en el estado compartido haria perder el sitio (ver useRestoreIndex).
   const [active, setActive] = useState(restoreIndex ?? 0);
   const count = stages.length;
+  // Las intros, como cadena: `measure` solo se rehace si CAMBIAN, no cada vez
+  // que el llamador cree un array `stages` nuevo con los mismos valores.
+  const introKey = stages.map((stage) => stage.introScreens ?? "").join(",");
+  const introScreens = useMemo(
+    () => introKey.split(",").map((value) => (value === "" ? undefined : Number(value))),
+    [introKey],
+  );
 
   const measure = useCallback(() => {
     const visor = visorRef.current;
@@ -112,6 +125,7 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
 
     const specs = Array.from({ length: count }, (_, index) => ({
       contentHeight: contentRefs.current[index]?.offsetHeight ?? 0,
+      introScreens: introScreens[index],
     }));
     const next = buildLayout(specs, visor.clientHeight);
 
@@ -144,7 +158,7 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
       anchor.current = anchoredStart;
       setAnchorTick((tick) => tick + 1);
     }
-  }, [count, layout, origin, scrollY]);
+  }, [count, introScreens, layout, origin, scrollY]);
 
   const syncActive = useCallback(() => {
     // Hasta que la pista se coloca (hash, restauracion), el scroll todavia es el

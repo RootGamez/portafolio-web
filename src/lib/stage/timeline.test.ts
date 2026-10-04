@@ -4,6 +4,7 @@ import {
   buildLayout,
   layerOpacity,
   EMPTY_LAYOUT,
+  introProgress,
   locate,
   offsetOfStage,
   panFor,
@@ -323,6 +324,38 @@ describe("stageProgress", () => {
 
   it("un indice inexistente devuelve 0", () => {
     expect(stageProgress(layout, 9, 100)).toBe(0);
+  });
+});
+
+describe("introProgress: avance 0..1 dentro de la INTRO del escenario (donde ocurre su coreografia)", () => {
+  // E1: start 1280, intro 480 (1280..1760), luego pan 600.
+  it("vale 0 al empezar el escenario, 1 al acabar la intro y la fraccion dentro", () => {
+    expect(introProgress(layout, 1, 1280)).toBe(0);
+    expect(introProgress(layout, 1, 1280 + 240)).toBe(0.5);
+    expect(introProgress(layout, 1, 1760)).toBe(1);
+  });
+
+  it("antes del escenario vale 0 y durante el pan (y despues) se queda en 1", () => {
+    expect(introProgress(layout, 1, 100)).toBe(0);
+    expect(introProgress(layout, 1, 2000)).toBe(1);
+    expect(introProgress(layout, 1, 4000)).toBe(1);
+  });
+
+  it("no depende del pan: dos escenarios con la misma intro avanzan igual aunque uno desborde", () => {
+    // E0 (cabe) y E1 (desborda 600) tienen la misma intro de 480 px.
+    expect(introProgress(layout, 0, 0 + 120)).toBe(introProgress(layout, 1, 1280 + 120));
+  });
+
+  it("una intro de largo 0 es un escalon en el inicio del escenario", () => {
+    const noIntro = buildLayout([{ contentHeight: 600, introScreens: 0 }], VIEWPORT);
+    expect(introProgress(noIntro, 0, 0)).toBe(1);
+    expect(introProgress(noIntro, 0, -5)).toBe(0);
+  });
+
+  it("un indice inexistente o un layout vacio devuelven 0; un scroll no finito, 0", () => {
+    expect(introProgress(layout, 9, 100)).toBe(0);
+    expect(introProgress(EMPTY_LAYOUT, 0, 100)).toBe(0);
+    expect(introProgress(layout, 1, Number.NaN)).toBe(0);
   });
 });
 

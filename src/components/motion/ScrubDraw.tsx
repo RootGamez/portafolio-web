@@ -1,10 +1,12 @@
 import { motion, useTransform } from "motion/react";
 import { useStage } from "@/components/stage/StageContext";
-import { drawFrame, type ScrubRange } from "@/lib/stage/scrub";
+import { drawFrame, type ScrubOver, type ScrubRange } from "@/lib/stage/scrub";
 
 type Props = {
-  /** Tramo del progreso del escenario (0..1) en el que se dibuja. Se lee al montar. */
+  /** Tramo (0..1) en el que se dibuja. Se lee al montar. */
   readonly range: ScrubRange;
+  /** Sobre que avance se mide el tramo. Por defecto la intro del escenario. */
+  readonly over?: ScrubOver;
   readonly d: string;
   readonly className?: string;
   readonly fill?: string;
@@ -21,8 +23,9 @@ type Props = {
  * En modo lineal es un `<path>` normal, dibujado entero y sin atributos de
  * animacion.
  */
-export function ScrubDraw({ range, ...pathProps }: Props) {
-  const { mode, progress } = useStage();
+export function ScrubDraw({ range, over = "intro", ...pathProps }: Props) {
+  const { mode, progress: stageProgress, intro } = useStage();
+  const progress = over === "intro" ? intro : stageProgress;
   const pathLength = useTransform(() => drawFrame(progress.get(), range).pathLength);
   const opacity = useTransform(() => drawFrame(progress.get(), range).opacity);
 

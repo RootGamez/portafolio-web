@@ -4,9 +4,12 @@ import { Section } from "@/components/layout/Section";
 import { Enso } from "@/components/ink/Enso";
 import { BrushFrame } from "@/components/ink/BrushFrame";
 import { BrushStroke } from "@/components/ink/BrushStroke";
+import { ScrubErase } from "@/components/motion/ScrubErase";
+import { ScrubParallax } from "@/components/motion/ScrubParallax";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getSectionMeta } from "@/sections/meta";
 import { EASE_INK } from "@/lib/motion";
+import type { ScrubRange } from "@/lib/stage/scrub";
 
 /**
  * Plancha 00 — la portada.
@@ -34,6 +37,23 @@ import { EASE_INK } from "@/lib/motion";
  */
 
 const META = getSectionMeta("inicio");
+
+/*
+ * Coreografia del modo escenarios (Fase 4.1), sobre la INTRO del escenario
+ * (STAGE_TIMING.inicio). Dos focos como maximo: el retrato con su sol, y
+ * el nombre. En modo lineal nada de esto existe: el Hero es el de siempre.
+ *
+ *   0 ─── el anillo de tinta rodea el sol ───── 0,6
+ *                               0,55 ─── el nombre se borra ─── 0,95
+ *   y, durante todo el escenario, el retrato sube mas que el sol (profundidad).
+ *
+ * En movil el sol queda detras del retrato (como en el sitio clasico) y el
+ * anillo no se ve: alli la escena es el nombre que se borra y, despues, el pan
+ * que descubre el retrato.
+ */
+const ENSO_RING: ScrubRange = [0.05, 0.6];
+const NAME_ERASE: ScrubRange = [0.55, 0.95];
+const PORTRAIT_RISE_PX = 56;
 
 export function Hero() {
   const reduced = usePrefersReducedMotion();
@@ -71,23 +91,26 @@ export function Hero() {
               Pisco · Ica · Perú
             </motion.p>
 
-            <motion.h1
-              {...rise(0.06)}
-              className="mt-4 font-poster text-poster uppercase leading-[0.82] text-[var(--g-heading)]"
-            >
-              <span className="block">Anthony</span>
-              <span className="block">Gámez</span>
-            </motion.h1>
+            {/* `w-fit`: la mascara se mide sobre el ancho del nombre, no de la columna. */}
+            <ScrubErase range={NAME_ERASE} className="w-fit">
+              <motion.h1
+                {...rise(0.06)}
+                className="mt-4 font-poster text-poster uppercase leading-[0.82] text-[var(--g-heading)]"
+              >
+                <span className="block">Anthony</span>
+                <span className="block">Gámez</span>
+              </motion.h1>
 
-            {/* Lectura en katakana, como el subtitulo japones de los carteles.
+              {/* Lectura en katakana, como el subtitulo japones de los carteles.
                 Decorativo: el nombre ya esta en el h1. */}
-            <motion.p
-              {...rise(0.12)}
-              aria-hidden="true"
-              className="mt-3 font-brush text-[clamp(0.85rem,1.7vw,1.35rem)] tracking-[0.42em] text-[var(--g-accent)]"
-            >
-              アンソニー
-            </motion.p>
+              <motion.p
+                {...rise(0.12)}
+                aria-hidden="true"
+                className="mt-3 font-brush text-[clamp(0.85rem,1.7vw,1.35rem)] tracking-[0.42em] text-[var(--g-accent)]"
+              >
+                アンソニー
+              </motion.p>
+            </ScrubErase>
 
             {/* Campo rojo con el rol. Crema sobre bermellon = 5.01:1. */}
             <motion.div
@@ -135,38 +158,45 @@ export function Hero() {
             transition={{ duration: 0.7, ease: EASE_INK, delay: 0.1 }}
             className="relative md:col-span-5 md:col-start-8"
           >
-            <Enso className="pointer-events-none absolute left-0 top-[-8%] h-[62%] w-[62%] md:left-[-14%] md:h-[72%] md:w-[72%]" />
+            <Enso
+              ring={ENSO_RING}
+              className="pointer-events-none absolute left-0 top-[-8%] h-[62%] w-[62%] md:left-[-14%] md:h-[72%] md:w-[72%]"
+            />
 
-            {/* La altura se acota en svh y no se deja crecer libre: con el
-                aspecto 3/4 a ancho completo el retrato se salia del viewport y
-                se comia el sello. El recorte lo absorbe el object-cover. */}
-            <BrushFrame className="relative mx-auto aspect-[4/5] max-h-[52svh] w-full sm:aspect-[3/4] md:max-h-[58svh] lg:max-h-[62svh]">
-              <picture>
-                <source srcSet="/media/img/anthony.avif" type="image/avif" />
-                <img
-                  src="/media/img/anthony.webp"
-                  alt="Anthony Gámez, desarrollador full stack, retrato de perfil"
-                  width={900}
-                  height={1200}
-                  loading="eager"
-                  decoding="sync"
-                  fetchPriority="high"
-                  /* El origen tiene aire de sobra sobre la cabeza. Con
-                     object-top el recorte conservaba ese hueco y se comia el
-                     pecho, dejando la cara alta y descolgada del cuerpo.
-                     Bajar el encuadre al 30% centra la cara con el torso. */
-                  className="block h-full w-full object-cover object-[50%_30%]"
-                />
-              </picture>
-            </BrushFrame>
+            {/* Paralaje (modo escenarios): retrato y sello suben mas que el sol.
+                `relative`: el sello se coloca igual con y sin transformacion. */}
+            <ScrubParallax distance={PORTRAIT_RISE_PX} className="relative">
+              {/* La altura se acota en svh y no se deja crecer libre: con el
+                  aspecto 3/4 a ancho completo el retrato se salia del viewport y
+                  se comia el sello. El recorte lo absorbe el object-cover. */}
+              <BrushFrame className="relative mx-auto aspect-[4/5] max-h-[52svh] w-full sm:aspect-[3/4] md:max-h-[58svh] lg:max-h-[62svh]">
+                <picture>
+                  <source srcSet="/media/img/anthony.avif" type="image/avif" />
+                  <img
+                    src="/media/img/anthony.webp"
+                    alt="Anthony Gámez, desarrollador full stack, retrato de perfil"
+                    width={900}
+                    height={1200}
+                    loading="eager"
+                    decoding="sync"
+                    fetchPriority="high"
+                    /* El origen tiene aire de sobra sobre la cabeza. Con
+                       object-top el recorte conservaba ese hueco y se comia el
+                       pecho, dejando la cara alta y descolgada del cuerpo.
+                       Bajar el encuadre al 30% centra la cara con el torso. */
+                    className="block h-full w-full object-cover object-[50%_30%]"
+                  />
+                </picture>
+              </BrushFrame>
 
-            {/* Sello (hanko) en el canto inferior del retrato, como firma. */}
-            <span
-              aria-hidden="true"
-              className="absolute -bottom-4 -left-2 flex size-14 rotate-[-4deg] items-center justify-center bg-shu font-brush text-[1.9rem] leading-none text-washi-hi shadow-ink-sm sm:size-16 sm:text-[2.2rem]"
-            >
-              放
-            </span>
+              {/* Sello (hanko) en el canto inferior del retrato, como firma. */}
+              <span
+                aria-hidden="true"
+                className="absolute -bottom-4 -left-2 flex size-14 rotate-[-4deg] items-center justify-center bg-shu font-brush text-[1.9rem] leading-none text-washi-hi shadow-ink-sm sm:size-16 sm:text-[2.2rem]"
+              >
+                放
+              </span>
+            </ScrubParallax>
           </motion.div>
         </div>
       </div>

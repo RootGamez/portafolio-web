@@ -21,6 +21,12 @@ export type StageContextValue = {
   readonly isNear: boolean;
   /** Progreso 0..1 del escenario. En modo lineal vale 1: todo en su estado final. */
   readonly progress: MotionValue<number>;
+  /**
+   * Progreso 0..1 de la INTRO del escenario (1 durante el pan). La coreografia
+   * de cada escena va sobre este, que no depende del alto del contenido. En modo
+   * lineal vale 1.
+   */
+  readonly intro: MotionValue<number>;
 };
 
 /**
@@ -37,6 +43,7 @@ export const LINEAR_STAGE: StageContextValue = {
   isActive: true,
   isNear: true,
   progress: motionValue(1),
+  intro: motionValue(1),
 };
 
 export const StageContext = createContext<StageContextValue>(LINEAR_STAGE);
