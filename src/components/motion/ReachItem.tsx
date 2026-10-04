@@ -14,6 +14,8 @@ type Props = {
   readonly delay?: number;
   /** Entrada por tiempo del modo lineal: fraccion visible que la dispara. */
   readonly amount?: number;
+  /** Entrada por tiempo del modo lineal: duracion en s. */
+  readonly duration?: number;
 };
 
 /**
@@ -22,7 +24,15 @@ type Props = {
  * en el modo lineal es el `Reveal` por tiempo de siempre, asi que el sitio
  * clasico no cambia.
  */
-export function ReachItem({ children, as = "div", className = "", y, delay, amount }: Props) {
+export function ReachItem({
+  children,
+  as = "div",
+  className = "",
+  y,
+  delay,
+  amount,
+  duration,
+}: Props) {
   const { mode } = useStage();
   if (mode === "deck") {
     return (
@@ -32,7 +42,7 @@ export function ReachItem({ children, as = "div", className = "", y, delay, amou
     );
   }
   return (
-    <Reveal as={as} className={className} y={y} delay={delay} amount={amount}>
+    <Reveal as={as} className={className} y={y} delay={delay} amount={amount} duration={duration}>
       {children}
     </Reveal>
   );

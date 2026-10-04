@@ -1,11 +1,8 @@
 import { ProjectCard } from "@/components/ProjectCard";
 import { Section } from "@/components/layout/Section";
-import { ReachItem } from "@/components/motion/ReachItem";
-import { ScrubReveal } from "@/components/motion/ScrubReveal";
+import { CardReach } from "@/components/motion/CardReach";
 import { isFeatured, projects } from "@/data/projects";
 import { STAGGER } from "@/lib/motion";
-import { CARD_VIDEO_READY_REACH } from "@/lib/stage/config";
-import type { ScrubRange } from "@/lib/stage/scrub";
 import { getSectionMeta } from "@/sections/meta";
 
 /* Los dos protagonistas. Se filtra por id y NO se reordena: el orden del array
@@ -19,15 +16,14 @@ const MEDIA_SIDES = ["start", "end"] as const;
 
 /*
  * Modo escenarios (Fase 4.4): las tarjetas entran DE UNA EN UNA, cada una al
- * alcanzarla la linea de lectura (`ReachItem`). El video sigue su regla de
+ * alcanzarla la linea de lectura (`CardReach`). El video sigue su regla de
  * siempre (hover/foco en escritorio; en tactil, al ocupar la pantalla, y solo
  * en el escenario activo, y nunca antes de que la tarjeta haya entrado):
  * arrancarlo con el scroll en escritorio seria un video que se pone en marcha
  * solo (WCAG 2.2.2, decision pendiente del usuario).
  */
-// Termina justo donde la tarjeta puede empezar a reproducir su video.
-const CARD_REVEAL: ScrubRange = [0, CARD_VIDEO_READY_REACH];
-const CARD_RISE_PX = 48;
+/** El mismo recorrido de entrada en los dos modos (en lineal es el de siempre). */
+const CARD_RISE_PX = 32;
 
 /**
  * 三 — Mis proyectos. Suelo SUMI (tinta, negativo).
@@ -57,27 +53,21 @@ export function Proyectos() {
 
       <div className="flex flex-col gap-14 lg:gap-20">
         {featured.map((project, index) => (
-          <ReachItem
+          <CardReach
             key={project.id}
-            y={32}
+            rise={CARD_RISE_PX}
             delay={index * STAGGER}
             // El solape de koma solo a partir de 768px: en movil, apilado limpio.
             className={index > 0 ? "koma-overlap-up" : ""}
           >
-            <ScrubReveal
-              range={CARD_REVEAL}
-              over="reach"
-              distance={CARD_RISE_PX}
-            >
-              <ProjectCard
-                project={project}
-                rotate={index === 0 ? -1 : 1}
-                featured
-                negative
-                mediaSide={MEDIA_SIDES[index % MEDIA_SIDES.length]}
-              />
-            </ScrubReveal>
-          </ReachItem>
+            <ProjectCard
+              project={project}
+              rotate={index === 0 ? -1 : 1}
+              featured
+              negative
+              mediaSide={MEDIA_SIDES[index % MEDIA_SIDES.length]}
+            />
+          </CardReach>
         ))}
       </div>
     </Section>

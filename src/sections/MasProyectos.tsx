@@ -1,6 +1,6 @@
 import { ProjectCard } from "@/components/ProjectCard";
 import { Section } from "@/components/layout/Section";
-import { Reveal } from "@/components/motion/Reveal";
+import { CardReach } from "@/components/motion/CardReach";
 import { isFeatured, projects } from "@/data/projects";
 import { STAGGER } from "@/lib/motion";
 import { getSectionMeta } from "@/sections/meta";
@@ -23,7 +23,15 @@ const META = getSectionMeta("mas-proyectos");
  * en una torre. Asi escala a cualquier numero sin volver a tocarlo.
  *
  * Todo eso solo a partir de 1024px. Por debajo, apilado limpio de una columna.
+ *
+ * Modo escenarios (Fase 4.5): es la escena mas larga (~4 pantallas en
+ * escritorio, ~6 en movil) y el bento entra TARJETA A TARJETA durante el pan,
+ * cada una al alcanzarla la linea de lectura (`CardReach`). Como se mide la
+ * posicion real, el orden de entrada es el visual (zigzag entre columnas), no
+ * el del DOM.
  */
+/** El mismo recorrido de entrada en los dos modos (en lineal es el de siempre). */
+const CARD_RISE_PX = 28;
 export function MasProyectos() {
   const rest = projects.filter((project) => !isFeatured(project.id));
 
@@ -49,9 +57,9 @@ export function MasProyectos() {
             linea se desmorone. */}
         <div className="flex flex-col gap-10 lg:col-span-7 lg:gap-8">
           {wide.map((project, index) => (
-            <Reveal key={project.id} y={28} delay={index * STAGGER}>
+            <CardReach key={project.id} rise={CARD_RISE_PX} delay={index * STAGGER}>
               <ProjectCard project={project} rotate={index % 2 === 0 ? -1 : 1} />
-            </Reveal>
+            </CardReach>
           ))}
         </div>
 
@@ -59,7 +67,7 @@ export function MasProyectos() {
             que impide que las vinetas se lean como filas de una tabla. */}
         <div className="flex flex-col gap-10 lg:col-span-5 lg:mt-16 lg:gap-8">
           {narrow.map((project, index) => (
-            <Reveal key={project.id} y={28} delay={(index + 1) * STAGGER}>
+            <CardReach key={project.id} rise={CARD_RISE_PX} delay={(index + 1) * STAGGER}>
               <ProjectCard
                 project={project}
                 rotate={index % 2 === 0 ? 1 : -1}
@@ -67,7 +75,7 @@ export function MasProyectos() {
                 // bullets y equilibran la altura de la columna.
                 compact={Boolean(project.media)}
               />
-            </Reveal>
+            </CardReach>
           ))}
         </div>
       </div>

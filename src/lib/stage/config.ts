@@ -32,6 +32,7 @@ export const STAGE_TIMING: Readonly<Record<string, StageTiming>> = {
   "sobre-mi": { introScreens: 1.4 },
   trayectoria: { introScreens: 1.2 },
   proyectos: { introScreens: 1 },
+  produccion: { introScreens: 1 },
 };
 
 /** Fin de la fase "cubrir" de una transicion (fraccion 0..1 de la transicion). */
