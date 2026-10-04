@@ -27,7 +27,7 @@ export type MountInkOptions = {
   readonly getFrame: () => InkFieldFrame | null;
   /** Lo que, al cambiar, obliga a repintar (scroll y layout). */
   readonly sources: readonly ChangeSource[];
-  /** true: se ve la tinta WebGL (ocultar la SVG); false: se ve la SVG. */
+  /** true: la tinta WebGL ya pinta (ocultar la SVG); false: se ve la SVG. */
   readonly onActive: (active: boolean) => void;
   /** WebGL descartado para siempre en esta pagina: quitar el canvas. */
   readonly onFail: () => void;
@@ -63,70 +63,105 @@ function whenIdle(callback: () => void): () => void {
   };
 }
 
+/**
+ * El monitor de calidad: apunta lo que tarda cada fotograma y, con lentitud
+ * sostenida, baja un tier. Devuelve el tier nuevo cuando hay que bajar.
+ */
+function createDegrader(initial: GlTier) {
+  let tier: GlTier = initial;
+  let monitor = EMPTY_MONITOR;
+  return {
+    get tier() {
+      return tier;
+    },
+    /** null = sigue igual; "T2" = bajar la calidad; "T1" = quitar WebGL. */
+    record(ms: number): "T2" | "T1" | null {
+      const result = recordFrame(monitor, ms);
+      monitor = result.monitor;
+      if (!result.slow) return null;
+      const next = lowerTier(tier);
+      if (next === "T2") tier = next;
+      return next;
+    },
+  };
+}
+
+type Running = { readonly engine: InkEngine; readonly unsubscribe: () => void };
+
+type EngineHandlers = {
+  readonly onStatus: (status: InkEngineStatus) => void;
+  readonly onFrameInterval: (ms: number) => void;
+};
+
+/** Crea el motor con la paleta leida junto al canvas y lo ata al scroll; null si no se puede. */
+function startEngine(
+  module: InkGlModule,
+  options: MountInkOptions,
+  tier: GlTier,
+  handlers: EngineHandlers,
+): Running | null {
+  const { canvas, getFrame, sources } = options;
+  const palette = module.readInkPalette(canvas.parentElement ?? document.body);
+  if (!palette) return null;
+  const engine = module.createInkEngine({ canvas, quality: TIER_QUALITY[tier], palette, getFrame, ...handlers });
+  if (!engine) return null;
+
+  // Para QA en el navegador: que tier esta pintando ahora.
+  canvas.dataset.inkTier = tier;
+  const stops = sources.map((source) => source.on("change", engine.requestRender));
+  // La tinta SVG se quita cuando el motor avisa "ready" (tras su primer pintado).
+  engine.requestRender();
+  return { engine, unsubscribe: () => stops.forEach((stop) => stop()) };
+}
+
 /** Monta la tinta WebGL; devuelve la funcion que la desmonta. */
 export function mountInkEngine(options: MountInkOptions): () => void {
-  const { canvas, load, getFrame, sources, onActive, onFail } = options;
+  const { canvas, load, onActive, onFail } = options;
+  const degrader = createDegrader(options.tier);
   let disposed = false;
-  let tier: GlTier = options.tier;
-  let monitor = EMPTY_MONITOR;
-  let engine: InkEngine | null = null;
-  let unsubscribe: (() => void)[] = [];
+  let active = false;
+  let running: Running | null = null;
 
-  const shutDown = () => {
-    unsubscribe.forEach((stop) => stop());
-    unsubscribe = [];
-    engine?.destroy();
-    engine = null;
+  const setActive = (next: boolean) => {
+    active = next;
+    onActive(next);
   };
-
+  const shutDown = () => {
+    running?.unsubscribe();
+    running?.engine.destroy();
+    running = null;
+  };
   const fail = () => {
     if (disposed) return;
     shutDown();
-    onActive(false);
+    setActive(false);
     onFail();
   };
-
-  const onFrameInterval = (ms: number) => {
-    const result = recordFrame(monitor, ms);
-    monitor = result.monitor;
-    if (!result.slow) return;
-    const next = lowerTier(tier);
-    if (next === "T1") return fail();
-    tier = next;
-    canvas.dataset.inkTier = next;
-    engine?.setQuality(TIER_QUALITY[next]);
+  const handlers: EngineHandlers = {
+    onStatus: (status) => (status === "failed" ? fail() : setActive(status === "ready")),
+    onFrameInterval: (ms) => {
+      const next = degrader.record(ms);
+      if (next === "T1") return fail();
+      if (next === null) return;
+      canvas.dataset.inkTier = next;
+      running?.engine.setQuality(TIER_QUALITY[next]);
+    },
   };
-
   const start = (module: InkGlModule) => {
     if (disposed) return;
-    const palette = module.readInkPalette(canvas.parentElement ?? document.body);
-    const created = palette
-      ? module.createInkEngine({
-          canvas,
-          quality: TIER_QUALITY[tier],
-          palette,
-          getFrame,
-          onStatus: (status: InkEngineStatus) => onActive(status === "ready"),
-          onFrameInterval,
-        })
-      : null;
-    if (!created) return fail();
-
-    engine = created;
-    // Para QA en el navegador: que tier esta pintando ahora.
-    canvas.dataset.inkTier = tier;
-    unsubscribe = sources.map((source) => source.on("change", created.requestRender));
-    onActive(true);
-    created.requestRender();
+    running = startEngine(module, options, degrader.tier, handlers);
+    if (!running) fail();
   };
 
-  const cancelIdle = whenIdle(() => {
-    load().then(start, fail);
-  });
+  // `.catch` y no el 2.o argumento de `then`: asi tambien llega a `fail` lo que
+  // lance `start` (paleta, motor, suscripciones), no solo el import() rechazado.
+  const cancelIdle = whenIdle(() => load().then(start).catch(fail));
 
   return () => {
     disposed = true;
     cancelIdle();
     shutDown();
+    // Si el efecto se rehace, que no quede la SVG apagada sin nadie que pinte.
+    if (active) setActive(false);
   };
 }

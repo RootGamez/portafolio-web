@@ -38,6 +38,8 @@ export type InkDrawInput = {
 export type InkRendererHooks = {
   readonly onLost: () => void;
   readonly onRestored: () => void;
+  /** El contexto volvio pero el shader ya no se puede preparar: no habra mas WebGL. */
+  readonly onRestoreFailed: () => void;
 };
 
 export type InkRenderer = {
@@ -68,8 +70,8 @@ const FULLSCREEN_TRIANGLE = new Float32Array([-1, -1, 3, -1, -1, 3]);
 
 type GpuResources = {
   readonly program: WebGLProgram;
-  readonly buffer: WebGLBuffer | null;
-  readonly locations: ReadonlyMap<string, WebGLUniformLocation | null>;
+  readonly buffer: WebGLBuffer;
+  readonly locations: ReadonlyMap<UniformName, WebGLUniformLocation | null>;
 };
 
 const UNIFORMS = [
@@ -131,7 +133,7 @@ function createResources(gl: WebGLRenderingContext): GpuResources | null {
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
-  const locations = new Map(UNIFORMS.map((name) => [name, gl.getUniformLocation(program, name)]));
+  const locations = new Map(UNIFORMS.map((name) => [name, gl.getUniformLocation(program, name)] as const));
   return { program, buffer, locations };
 }
 
@@ -182,81 +184,112 @@ function watchContextLoss(canvas: HTMLCanvasElement, onLost: () => void, onResto
   };
 }
 
+/** Suelta el contexto ya, sin esperar al recolector (la GPU importa en movil). */
+function releaseContext(gl: WebGLRenderingContext): void {
+  gl.getExtension("WEBGL_lose_context")?.loseContext();
+}
+
+/** Estado vivo de un renderer: lo comparten los metodos y la escucha de perdida. */
+type RendererState = {
+  resources: GpuResources | null;
+  quality: InkQuality;
+  lost: boolean;
+  destroyed: boolean;
+  cssSize: { readonly width: number; readonly height: number; readonly devicePixelRatio: number };
+};
+
+function applySize(gl: WebGLRenderingContext, canvas: HTMLCanvasElement, state: RendererState): void {
+  const dpr = effectiveDpr(state.cssSize.devicePixelRatio, state.quality.dprCap);
+  canvas.width = Math.max(1, Math.round(state.cssSize.width * dpr));
+  canvas.height = Math.max(1, Math.round(state.cssSize.height * dpr));
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+function usable(state: RendererState): GpuResources | null {
+  return state.destroyed || state.lost ? null : state.resources;
+}
+
+function rendererApi(
+  gl: WebGLRenderingContext,
+  canvas: HTMLCanvasElement,
+  state: RendererState,
+  unwatch: () => void,
+): InkRenderer {
+  return {
+    resize(width, height, devicePixelRatio) {
+      state.cssSize = { width, height, devicePixelRatio };
+      if (usable(state)) applySize(gl, canvas, state);
+    },
+    setQuality(next) {
+      state.quality = next;
+      if (usable(state)) applySize(gl, canvas, state);
+    },
+    draw(input) {
+      const current = usable(state);
+      if (!current) return false;
+      const dpr = effectiveDpr(state.cssSize.devicePixelRatio, state.quality.dprCap);
+      const at = (name: UniformName) => current.locations.get(name) ?? null;
+      const extras = { width: canvas.width, height: canvas.height, dpr, octaves: state.quality.octaves };
+      writeUniforms(gl, at, input, extras);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      return true;
+    },
+    clear() {
+      if (!usable(state)) return;
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    },
+    get lost() {
+      return state.lost;
+    },
+    destroy() {
+      if (state.destroyed) return;
+      state.destroyed = true;
+      unwatch();
+      releaseResources(gl, state.resources);
+      state.resources = null;
+      releaseContext(gl);
+    },
+  };
+}
+
 export function createInkRenderer(
   canvas: HTMLCanvasElement,
   initialQuality: InkQuality,
   hooks: InkRendererHooks,
 ): InkRenderer | null {
-  const gl = canvas.getContext("webgl", CONTEXT_OPTIONS) as WebGLRenderingContext | null;
+  const gl = canvas.getContext("webgl", CONTEXT_OPTIONS);
   if (!gl) return null;
 
-  let resources = createResources(gl);
-  if (!resources) return null;
+  const resources = createResources(gl);
+  if (!resources) {
+    releaseContext(gl);
+    return null;
+  }
 
-  let quality = initialQuality;
-  let lost = false;
-  let destroyed = false;
-  let cssSize = { width: 0, height: 0, devicePixelRatio: 1 };
-
-  const applySize = () => {
-    const dpr = effectiveDpr(cssSize.devicePixelRatio, quality.dprCap);
-    canvas.width = Math.max(1, Math.round(cssSize.width * dpr));
-    canvas.height = Math.max(1, Math.round(cssSize.height * dpr));
-    gl.viewport(0, 0, canvas.width, canvas.height);
+  const state: RendererState = {
+    resources,
+    quality: initialQuality,
+    lost: false,
+    destroyed: false,
+    cssSize: { width: 0, height: 0, devicePixelRatio: 1 },
   };
 
   const unwatch = watchContextLoss(
     canvas,
     () => {
-      lost = true;
-      resources = null;
+      state.lost = true;
+      state.resources = null;
       hooks.onLost();
     },
     () => {
-      resources = createResources(gl);
-      if (!resources) return;
-      lost = false;
-      applySize();
+      state.resources = createResources(gl);
+      if (!state.resources) return hooks.onRestoreFailed();
+      state.lost = false;
+      applySize(gl, canvas, state);
       hooks.onRestored();
     },
   );
 
-  const usable = (): GpuResources | null => (destroyed || lost ? null : resources);
-
-  return {
-    resize(width, height, devicePixelRatio) {
-      cssSize = { width, height, devicePixelRatio };
-      if (usable()) applySize();
-    },
-    setQuality(next) {
-      quality = next;
-      if (usable()) applySize();
-    },
-    draw(input) {
-      const current = usable();
-      if (!current) return false;
-      const dpr = effectiveDpr(cssSize.devicePixelRatio, quality.dprCap);
-      const at = (name: UniformName) => current.locations.get(name) ?? null;
-      writeUniforms(gl, at, input, { width: canvas.width, height: canvas.height, dpr, octaves: quality.octaves });
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      return true;
-    },
-    clear() {
-      if (!usable()) return;
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    },
-    get lost() {
-      return lost;
-    },
-    destroy() {
-      if (destroyed) return;
-      destroyed = true;
-      unwatch();
-      releaseResources(gl, resources);
-      resources = null;
-      // Devuelve la GPU ya, sin esperar al recolector (importa en movil).
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
-    },
-  };
+  return rendererApi(gl, canvas, state, unwatch);
 }

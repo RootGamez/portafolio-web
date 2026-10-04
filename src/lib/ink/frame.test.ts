@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   CARD_HIDE_END,
   CARD_SHOW_START,
@@ -68,6 +69,22 @@ describe("EFFECT_IDS", () => {
   });
 });
 
+describe("EFFECT_IDS y el shader hablan de los mismos numeros", () => {
+  // `?raw` funciona con .glsl, pero se lee del disco como el resto de tests de fuentes.
+  const shader = readFileSync("src/lib/ink/shaders/ink.frag.glsl", "utf-8");
+
+  it("cada efecto tiene su rama en fields() con el umbral de su numero", () => {
+    const ids = Object.values(EFFECT_IDS).sort((a, b) => a - b);
+    const branches = ids.slice(0, -1).map((id) => `uEffect < ${id}.5`);
+
+    branches.forEach((branch) => expect(shader).toContain(branch));
+  });
+
+  it("la aguada (borde difuso) se reconoce por su numero, no por un 5 magico", () => {
+    expect(shader).toContain(`#define EFFECT_WASH ${EFFECT_IDS.wash}.0`);
+  });
+});
+
 describe("inkFieldFrame", () => {
   const transitions = TRANSITIONS.slice(0, 2);
 
@@ -116,6 +133,16 @@ describe("sameFieldFrame", () => {
   it("dos fotogramas del mismo scroll son iguales (no hace falta volver a pintar)", () => {
     expect(sameFieldFrame(at(600), at(600))).toBe(true);
     expect(sameFieldFrame(null, null)).toBe(true);
+  });
+
+  it("cualquier campo distinto obliga a pintar (no solo indice y fases)", () => {
+    const base = at(600);
+    if (!base) throw new Error("se esperaba un fotograma en una transicion");
+
+    expect(sameFieldFrame(base, { ...base, mirror: !base.mirror })).toBe(false);
+    expect(sameFieldFrame(base, { ...base, ink: "kin" })).toBe(false);
+    expect(sameFieldFrame(base, { ...base, effect: base.effect + 1 })).toBe(false);
+    expect(sameFieldFrame(base, { ...base, tonePitch: base.tonePitch + 1 })).toBe(false);
   });
 
   it("distinto avance o distinta transicion obligan a pintar", () => {

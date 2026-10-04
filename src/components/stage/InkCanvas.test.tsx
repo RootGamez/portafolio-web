@@ -67,11 +67,12 @@ describe("InkCanvas", () => {
     expect(loadEngine).not.toHaveBeenCalled();
   });
 
-  it("en T3 pone el canvas, carga el chunk en reposo y avisa de que la tinta WebGL esta activa", async () => {
-    const { canvas, loadEngine, onActiveChange } = setup({ tier: "T3" });
+  it("en T3 pone el canvas, carga el chunk en reposo y, cuando el motor pinta, avisa de que la tinta WebGL esta activa", async () => {
+    const { canvas, loadEngine, onActiveChange, loaded } = setup({ tier: "T3" });
     expect(canvas()).not.toBeNull();
 
     await idle();
+    loaded.engines[0]?.options.onStatus("ready");
 
     expect(loadEngine).toHaveBeenCalledTimes(1);
     expect(onActiveChange).toHaveBeenLastCalledWith(true);
@@ -85,6 +86,31 @@ describe("InkCanvas", () => {
     expect(getFrame?.()).toBeNull();
     scrollOffset.set(480 + 200);
     expect(getFrame?.()).toMatchObject({ index: 0, ink: TRANSITIONS_USED[0].ink });
+  });
+
+  it("si el motor se reinicia (cambia la lista de transiciones) usa un canvas NUEVO: el viejo ya solto su contexto", async () => {
+    const { canvas, loaded, rerender, onActiveChange, scrollOffset } = setup({ tier: "T3" });
+    await idle();
+    loaded.engines[0]?.options.onStatus("ready");
+    const first = canvas();
+
+    rerender(
+      <InkCanvas
+        transitions={TRANSITIONS.slice(0, 2)}
+        layout={LAYOUT}
+        scrollOffset={scrollOffset}
+        onActiveChange={onActiveChange}
+        initialTier="T3"
+        loadEngine={() => Promise.resolve(loaded.module)}
+      />,
+    );
+    await idle();
+
+    expect(onActiveChange).toHaveBeenCalledWith(false);
+    expect(loaded.engines).toHaveLength(2);
+    expect(loaded.engines[1]?.options.canvas).not.toBe(first);
+    expect(loaded.engines[1]?.options.canvas.isConnected).toBe(true);
+    expect(first?.isConnected).toBe(false);
   });
 
   it("si WebGL no arranca quita el canvas y deja la tinta SVG", async () => {

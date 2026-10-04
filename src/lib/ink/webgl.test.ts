@@ -18,7 +18,7 @@ const INPUT: InkDrawInput = {
 
 function setup(quality: InkQuality = HIGH, gl: FakeGL | null = createFakeGL()) {
   const canvas = canvasWithGL(gl);
-  const hooks = { onLost: vi.fn(), onRestored: vi.fn() };
+  const hooks = { onLost: vi.fn(), onRestored: vi.fn(), onRestoreFailed: vi.fn() };
   const renderer = createInkRenderer(canvas, quality, hooks);
   return { canvas, gl: gl as FakeGL, hooks, renderer };
 }
@@ -65,6 +65,15 @@ describe("createInkRenderer: contexto", () => {
 
     expect(renderer).toBeNull();
     expect(gl.deleteShader).toHaveBeenCalled();
+  });
+
+  it("si no puede preparar el shader suelta el contexto ya creado (no se queda ocupando la GPU)", () => {
+    const gl = createFakeGL();
+    gl.failures.compile = true;
+
+    setup(HIGH, gl);
+
+    expect(gl.loseContext).toHaveBeenCalledTimes(1);
   });
 
   it("si el programa no enlaza devuelve null y borra el programa", () => {
@@ -207,6 +216,7 @@ describe("createInkRenderer: perdida del contexto", () => {
 
     expect(renderer?.lost).toBe(true);
     expect(hooks.onRestored).not.toHaveBeenCalled();
+    expect(hooks.onRestoreFailed).toHaveBeenCalledTimes(1);
   });
 });
 

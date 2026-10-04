@@ -1,4 +1,16 @@
-import { INK_FRAME_BUDGET_MS, INK_MONITOR_WINDOW, INK_SLOW_SHARE } from "@/lib/stage/config";
+import {
+  INK_FRAME_BUDGET_MS,
+  INK_LOW_END_CORES,
+  INK_LOW_END_MEMORY_GB,
+  INK_MIN_GL_CORES,
+  INK_MIN_GL_MEMORY_GB,
+  INK_MONITOR_WINDOW,
+  INK_SLOW_SHARE,
+  INK_T2_DPR_CAP,
+  INK_T2_OCTAVES,
+  INK_T3_DPR_CAP,
+  INK_T3_OCTAVES,
+} from "@/lib/stage/config";
 import type { InkQuality } from "./webgl";
 
 /**
@@ -15,8 +27,8 @@ export type InkTier = "T3" | "T2" | "T1";
 export type GlTier = Exclude<InkTier, "T1">;
 
 export const TIER_QUALITY: Readonly<Record<GlTier, InkQuality>> = {
-  T3: { dprCap: 1.5, octaves: 5 },
-  T2: { dprCap: 1, octaves: 3 },
+  T3: { dprCap: INK_T3_DPR_CAP, octaves: INK_T3_OCTAVES },
+  T2: { dprCap: INK_T2_DPR_CAP, octaves: INK_T2_OCTAVES },
 };
 
 export type DeviceHints = {
@@ -37,15 +49,17 @@ export function pickInkTier(hints: DeviceHints): InkTier {
 
   const cores = hardwareConcurrency ?? 0;
   const memory = deviceMemory;
-  if ((memory !== undefined && memory <= 1) || (cores > 0 && cores <= 2)) return "T1";
+  if ((memory !== undefined && memory <= INK_MIN_GL_MEMORY_GB) || (cores > 0 && cores <= INK_MIN_GL_CORES)) return "T1";
 
-  const lowEnd = (memory !== undefined && memory <= 2) || (memory === undefined && cores > 0 && cores <= 4);
+  const lowEnd =
+    (memory !== undefined && memory <= INK_LOW_END_MEMORY_GB) ||
+    (memory === undefined && cores > 0 && cores <= INK_LOW_END_CORES);
   return lowEnd ? "T2" : "T3";
 }
 
-export function lowerTier(tier: InkTier): InkTier {
-  if (tier === "T3") return "T2";
-  return "T1";
+/** Un escalon por debajo de un tier WebGL: de T3 a T2 y de T2 a la tinta SVG. */
+export function lowerTier(tier: GlTier): Exclude<InkTier, "T3"> {
+  return tier === "T3" ? "T2" : "T1";
 }
 
 export type FrameMonitor = {

@@ -265,6 +265,53 @@ describe("createInkEngine", () => {
     expect(onFrameInterval.mock.calls).toEqual([[16], [34]]);
   });
 
+  it("una rueda de muescas (un dibujo cada 100 ms) NO cuenta como lentitud: se mide el fotograma siguiente al dibujo", () => {
+    const { engine, frames, onFrameInterval, setFrame } = setup();
+    const notch = (timestamp: number, cover: number) => {
+      setFrame({ ...FRAME, cover });
+      engine?.requestRender();
+      frames.flush(timestamp);
+      // El fotograma "de cola" que sigue al dibujo: aqui se mide.
+      frames.flush(timestamp + 16);
+    };
+
+    notch(100, 0.1);
+    notch(200, 0.2);
+    notch(300, 0.3);
+
+    expect(onFrameInterval.mock.calls).toEqual([[16], [16], [16]]);
+    expect(frames.count()).toBe(0);
+  });
+
+  it("avisa de que esta listo tras el PRIMER pintado (dibujo o limpieza), no al crearse", () => {
+    const { engine, frames, onStatus } = setup(null);
+    expect(onStatus).not.toHaveBeenCalled();
+
+    engine?.requestRender();
+    frames.flush(16);
+
+    expect(onStatus).toHaveBeenCalledTimes(1);
+    expect(onStatus).toHaveBeenCalledWith("ready");
+  });
+
+  it("al redimensionar repinta EN EL ACTO: cambiar el tamano del buffer lo borra y no debe verse un fotograma vacio", () => {
+    const { engine, frames, renderer } = setup();
+    engine?.requestRender();
+    frames.flush(16);
+
+    triggerResize();
+
+    expect(renderer().draw).toHaveBeenCalledTimes(2);
+  });
+
+  it("si la GPU no se puede restaurar avisa de fallo (para volver a SVG del todo)", () => {
+    const { onStatus, renderer } = setup();
+
+    renderer().hooks.onRestoreFailed();
+
+    expect(onStatus).toHaveBeenLastCalledWith("failed");
+  });
+
   it("setQuality pasa la calidad nueva al renderer y repinta", () => {
     const { engine, frames, renderer } = setup();
     engine?.requestRender();

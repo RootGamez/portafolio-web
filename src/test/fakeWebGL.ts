@@ -28,9 +28,6 @@ const CONSTANTS = {
   FLOAT: 0x1406,
   TRIANGLES: 0x0004,
   COLOR_BUFFER_BIT: 0x4000,
-  BLEND: 0x0be2,
-  ONE: 1,
-  ONE_MINUS_SRC_ALPHA: 0x0303,
 };
 
 export function createFakeGL(): FakeGL {
@@ -50,13 +47,11 @@ export function createFakeGL(): FakeGL {
     shaderSource: vi.fn(),
     compileShader: vi.fn(),
     getShaderParameter: vi.fn(() => !failures.compile),
-    getShaderInfoLog: vi.fn(() => "error de compilacion simulado"),
     deleteShader: vi.fn(),
     createProgram: vi.fn(() => ({})),
     attachShader: vi.fn(),
     linkProgram: vi.fn(),
     getProgramParameter: vi.fn(() => !failures.link),
-    getProgramInfoLog: vi.fn(() => "error de enlazado simulado"),
     deleteProgram: vi.fn(),
     useProgram: vi.fn(),
     createBuffer: vi.fn(() => ({})),
@@ -74,8 +69,6 @@ export function createFakeGL(): FakeGL {
     viewport: vi.fn(),
     clearColor: vi.fn(),
     clear: vi.fn(),
-    enable: vi.fn(),
-    blendFunc: vi.fn(),
     drawArrays: vi.fn(),
     isContextLost: vi.fn(() => false),
     getExtension: vi.fn((name: string) => {

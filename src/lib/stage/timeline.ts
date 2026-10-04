@@ -118,11 +118,16 @@ export function smoothstep(edge0: number, edge1: number, x: number): number {
 
 /**
  * Construye el layout a partir de las alturas medidas. Es inmutable de cara al
- * llamador: no toca `specs` y devuelve estructuras nuevas.
+ * llamador: no toca `specs` y devuelve estructuras nuevas. `transitionScreens` es
+ * el tempo (largo de cada transicion en visores); por defecto el de config.ts.
  */
-export function buildLayout(specs: readonly StageSpec[], viewportHeight: number): Layout {
+export function buildLayout(
+  specs: readonly StageSpec[],
+  viewportHeight: number,
+  transitionScreens: number = TRANSITION_SCREENS,
+): Layout {
   const vh = Math.max(1, Math.round(finiteOr(viewportHeight, 1)));
-  const transitionLength = Math.max(1, Math.round(TRANSITION_SCREENS * vh));
+  const transitionLength = Math.max(1, Math.round(finiteOr(transitionScreens, TRANSITION_SCREENS) * vh));
 
   const stages: StageSegment[] = [];
   const transitions: TransitionSegment[] = [];

@@ -13,12 +13,13 @@ type FakeEngine = InkEngine & {
   readonly destroy: ReturnType<typeof vi.fn>;
 };
 
-function fakeModule(options: { palette?: InkPalette | null; engine?: "ok" | "null" } = {}) {
+function fakeModule(options: { palette?: InkPalette | null; engine?: "ok" | "null" | "throw" } = {}) {
   let created: { engine: FakeEngine; options: InkEngineOptions } | null = null;
   const module: InkGlModule = {
     readInkPalette: vi.fn(() => (options.palette === undefined ? PALETTE : options.palette)),
     createInkEngine: vi.fn((engineOptions: InkEngineOptions) => {
       if (options.engine === "null") return null;
+      if (options.engine === "throw") throw new Error("shader roto");
       const engine: FakeEngine = { requestRender: vi.fn(), setQuality: vi.fn(), destroy: vi.fn() };
       created = { engine, options: engineOptions };
       return engine;
@@ -47,7 +48,7 @@ function setup(loaded: ReturnType<typeof fakeModule> | "reject" = fakeModule()) 
     onActive,
     onFail,
   });
-  return { canvas, host, scroll, onActive, onFail, load, dispose, loaded };
+  return { canvas, host, layout, scroll, onActive, onFail, load, dispose, loaded };
 }
 
 /** Pasa la espera de reposo y deja resolver el import(). */
@@ -107,16 +108,48 @@ describe("mountInkEngine", () => {
     }
   });
 
-  it("crea el motor con la calidad del tier y la paleta leida junto al canvas, y avisa de que esta activo", async () => {
-    const { host, onActive, loaded } = setup();
+  it("crea el motor con la calidad del tier y la paleta leida junto al canvas, y pide el primer pintado", async () => {
+    const { host, loaded } = setup();
     await idle();
 
     const created = (loaded as ReturnType<typeof fakeModule>).created();
     expect((loaded as ReturnType<typeof fakeModule>).module.readInkPalette).toHaveBeenCalledWith(host);
     expect(created?.options.quality).toEqual(TIER_QUALITY.T3);
     expect(created?.options.palette).toBe(PALETTE);
-    expect(onActive).toHaveBeenLastCalledWith(true);
     expect(created?.engine.requestRender).toHaveBeenCalledTimes(1);
+  });
+
+  it("no quita la tinta SVG hasta que el motor ha pintado de verdad (sin un hueco sin tinta)", async () => {
+    const { onActive, loaded } = setup();
+    await idle();
+    expect(onActive).not.toHaveBeenCalledWith(true);
+
+    (loaded as ReturnType<typeof fakeModule>).created()?.options.onStatus("ready");
+
+    expect(onActive).toHaveBeenLastCalledWith(true);
+  });
+
+  it("si la GPU no vuelve (\"failed\") apaga WebGL para siempre", async () => {
+    const { onActive, onFail, loaded } = setup();
+    await idle();
+    const { engine, options } = (loaded as ReturnType<typeof fakeModule>).created() ?? {};
+    options?.onStatus("ready");
+
+    options?.onStatus("failed");
+
+    expect(engine?.destroy).toHaveBeenCalledTimes(1);
+    expect(onActive).toHaveBeenLastCalledWith(false);
+    expect(onFail).toHaveBeenCalledTimes(1);
+  });
+
+  it("un cambio del LAYOUT (resize, fuentes) tambien pide un fotograma", async () => {
+    const { layout, loaded } = setup();
+    await idle();
+    const engine = (loaded as ReturnType<typeof fakeModule>).created()?.engine;
+
+    layout.set(1);
+
+    expect(engine?.requestRender).toHaveBeenCalledTimes(2);
   });
 
   it("cada cambio del scroll o del layout pide un fotograma (render bajo demanda)", async () => {
@@ -134,6 +167,14 @@ describe("mountInkEngine", () => {
     ["sin WebGL utilizable (el motor es null)", fakeModule({ engine: "null" })],
   ])("%s: se queda en SVG sin activarse", async (_label, loaded) => {
     const { onActive, onFail } = setup(loaded);
+    await idle();
+
+    expect(onActive).not.toHaveBeenCalledWith(true);
+    expect(onFail).toHaveBeenCalledTimes(1);
+  });
+
+  it("si crear el motor LANZA (no solo devuelve null) tambien acaba en onFail, sin promesa sin capturar", async () => {
+    const { onActive, onFail } = setup(fakeModule({ engine: "throw" }));
     await idle();
 
     expect(onActive).not.toHaveBeenCalledWith(true);
@@ -219,5 +260,16 @@ describe("mountInkEngine", () => {
 
     expect(engine?.destroy).toHaveBeenCalledTimes(1);
     expect(engine?.requestRender).toHaveBeenCalledTimes(1);
+  });
+
+  it("desmontar con la tinta WebGL activa devuelve el turno a la SVG (si el efecto se rehace, no queda nada pintando)", async () => {
+    const { dispose, onActive, onFail, loaded } = setup();
+    await idle();
+    (loaded as ReturnType<typeof fakeModule>).created()?.options.onStatus("ready");
+
+    dispose();
+
+    expect(onActive).toHaveBeenLastCalledWith(false);
+    expect(onFail).not.toHaveBeenCalled();
   });
 });

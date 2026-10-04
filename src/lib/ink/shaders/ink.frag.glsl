@@ -30,6 +30,9 @@ uniform int uOctaves;
 uniform vec3 uInk;
 uniform vec3 uRim;
 
+// Numeros de efecto: los de EFFECT_IDS (lib/ink/frame.ts; frame.test.ts los cruza).
+#define EFFECT_WASH 5.0
+
 const int MAX_OCTAVES = 5;
 const int FLOOD_DROPS = 7;
 const int SPLASH_DROPS = 6;
@@ -237,7 +240,7 @@ void main() {
   vec2 fg = clamp(fields(uv, p, s, aspect), 0.0, 1.0);
   // Cuanto campo cabe en un pixel: convierte anchos en px a unidades de campo.
   vec2 perPx = max(fwidth(fg), vec2(1e-5));
-  float edgePx = abs(uEffect - 5.0) < 0.5 ? WASH_EDGE_PX : EDGE_PX;
+  float edgePx = abs(uEffect - EFFECT_WASH) < 0.5 ? WASH_EDGE_PX : EDGE_PX;
   vec2 soft = min(perPx * edgePx, vec2(SOFT_MAX));
   vec2 rimWidth = min(perPx * RIM_PX, vec2(SOFT_MAX * 2.0));
   vec2 toneZone = clamp(perPx * TONE_PX, vec2(0.01), vec2(0.15));

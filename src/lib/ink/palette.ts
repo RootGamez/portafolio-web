@@ -8,8 +8,6 @@ import type { Rgb } from "./webgl";
  * La tinta es `--g-bg` del suelo y el pigmento seco del frente, `--g-ink-rim`.
  */
 
-const GROUNDS: readonly Ground[] = ["washi", "sumi", "shu", "kin"];
-
 const HEX_LONG = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 const HEX_SHORT = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
 const RGB_FUNCTION = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i;
@@ -43,9 +41,16 @@ function readGround(host: HTMLElement, ground: Ground): { ink: Rgb; rim: Rgb } |
   return ink && rim ? { ink, rim } : null;
 }
 
-/** La paleta de los cuatro suelos, o null si falta alguno (entonces, tinta SVG). */
+/**
+ * La paleta de los cuatro suelos, o null si falta alguno (entonces, tinta SVG).
+ * Un literal y no un bucle: si `Ground` gana un suelo, esto deja de compilar en
+ * vez de devolver una paleta incompleta que reventaria en cada fotograma.
+ */
 export function readInkPalette(host: HTMLElement): InkPalette | null {
-  const entries = GROUNDS.map((ground) => [ground, readGround(host, ground)] as const);
-  if (entries.some(([, colors]) => colors === null)) return null;
-  return Object.fromEntries(entries) as InkPalette;
+  const washi = readGround(host, "washi");
+  const sumi = readGround(host, "sumi");
+  const shu = readGround(host, "shu");
+  const kin = readGround(host, "kin");
+  if (!washi || !sumi || !shu || !kin) return null;
+  return { washi, sumi, shu, kin };
 }

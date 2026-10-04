@@ -12,6 +12,8 @@ vi.mock("@/lib/stage/config", async (importOriginal) => ({
   get JUMP_CURTAIN_MS() {
     return duration.ms;
   },
+  // Este mock sustituye al de setup.ts: repite su geometria de referencia.
+  TRANSITION_SCREENS: 1,
 }));
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

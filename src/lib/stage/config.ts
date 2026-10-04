@@ -87,6 +87,26 @@ export const INK_MONITOR_WINDOW = 40;
 export const INK_SLOW_SHARE = 0.25;
 
 /**
+ * Calidad de los tiers WebGL de la tinta (docs/PLAN_ESCENARIOS.md §6): tope del
+ * devicePixelRatio del buffer y octavas del ruido fBm del shader.
+ */
+export const INK_T3_DPR_CAP = 1.5;
+export const INK_T3_OCTAVES = 5;
+export const INK_T2_DPR_CAP = 1;
+export const INK_T2_OCTAVES = 3;
+
+/**
+ * Pistas del dispositivo para elegir tier (heuristica de la skill motion-ui).
+ * Gama baja (-> T2): <= INK_LOW_END_MEMORY_GB, o sin `deviceMemory` y
+ * <= INK_LOW_END_CORES nucleos. Muy justo (-> SVG): <= INK_MIN_GL_MEMORY_GB o
+ * <= INK_MIN_GL_CORES nucleos.
+ */
+export const INK_LOW_END_MEMORY_GB = 2;
+export const INK_LOW_END_CORES = 4;
+export const INK_MIN_GL_MEMORY_GB = 1;
+export const INK_MIN_GL_CORES = 2;
+
+/**
  * Espera, tras el evento `load`, antes de descargar el chunk WebGL cuando el
  * navegador no tiene `requestIdleCallback` (Safari): que no compita con la carga.
  */

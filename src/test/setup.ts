@@ -12,8 +12,11 @@ afterEach(() => {
  * (TRANSITION_SCREENS en config.ts) es un ajuste de ritmo que el usuario afina a
  * ojo; los tests prueban la logica del motor con numeros faciles de seguir
  * ("T0 480..1280" con un visor de 800) y no tienen que reescribirse cada vez que
- * cambia el tempo. La formula (largo = TRANSITION_SCREENS × visor) la sigue
- * comprobando timeline.test.ts con la constante importada.
+ * cambia el tempo. timeline.test.ts prueba el tempo explicito y que el valor
+ * REAL (vi.importActual) sea mas lento que una pantalla.
+ *
+ * OJO: un archivo que declare su propio vi.mock de este modulo SUSTITUYE a este y
+ * debe repetir `TRANSITION_SCREENS: 1` (ver StageGeometry/StageNavigation/useJumpCurtain).
  */
 vi.mock("@/lib/stage/config", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/stage/config")>()),

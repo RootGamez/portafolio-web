@@ -85,8 +85,19 @@ export function inkFieldFrame(
   };
 }
 
-/** Si dos fotogramas pintan lo mismo (el renderer se ahorra el dibujo). */
+/**
+ * Si dos fotogramas pintan lo mismo (el renderer se ahorra el dibujo). Compara
+ * TODOS los campos: si InkFieldFrame gana uno, hay que anadirlo aqui.
+ */
 export function sameFieldFrame(a: InkFieldFrame | null, b: InkFieldFrame | null): boolean {
   if (a === null || b === null) return a === b;
-  return a.index === b.index && a.cover === b.cover && a.erase === b.erase;
+  return (
+    a.index === b.index &&
+    a.cover === b.cover &&
+    a.erase === b.erase &&
+    a.effect === b.effect &&
+    a.ink === b.ink &&
+    a.mirror === b.mirror &&
+    a.tonePitch === b.tonePitch
+  );
 }

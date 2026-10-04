@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   activeIndex,
   buildLayout,
@@ -37,7 +37,19 @@ const SPECS: readonly StageSpec[] = [
 const layout = buildLayout(SPECS, VIEWPORT);
 
 describe("buildLayout", () => {
-  it("cada transicion mide TRANSITION_SCREENS altos de visor (el tempo sale de config.ts)", () => {
+  it("el tempo se puede pasar explicito: cada transicion mide ese numero de visores", () => {
+    const layout = buildLayout([{ contentHeight: 600 }, { contentHeight: 600 }], 737, 2.5);
+
+    expect(layout.transitions[0]?.length).toBe(Math.round(2.5 * 737));
+  });
+
+  it("el tempo real de config.ts (sin el mock de referencia de los tests) es mas lento que una pantalla", async () => {
+    const real = await vi.importActual<typeof import("./config")>("./config");
+
+    expect(real.TRANSITION_SCREENS).toBeGreaterThan(1);
+  });
+
+  it("sin tempo explicito usa TRANSITION_SCREENS de config.ts", () => {
     const layout = buildLayout([{ contentHeight: 600 }, { contentHeight: 600 }, { contentHeight: 600 }], 737);
 
     layout.transitions.forEach((transition) => {

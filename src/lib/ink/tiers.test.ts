@@ -43,10 +43,9 @@ describe("pickInkTier", () => {
 });
 
 describe("lowerTier", () => {
-  it("baja un escalon y en T1 se queda", () => {
+  it("baja un escalon: de T3 a T2 y de T2 a la tinta SVG (T1 no tiene escalon: no compila)", () => {
     expect(lowerTier("T3")).toBe("T2");
     expect(lowerTier("T2")).toBe("T1");
-    expect(lowerTier("T1")).toBe("T1");
   });
 });
 

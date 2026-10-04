@@ -36,7 +36,7 @@ function readDeviceHints(): DeviceHints {
 const loadGlChunk = () => import("@/lib/ink/glChunk");
 
 /**
- * El canvas de la tinta WebGL (tiers T3/T2). Solo pone el `<canvas>` y lo entrega a
+ * El canvas de la tinta WebGL (tiers T3/T2). Crea el `<canvas>` y lo entrega a
  * mountInkEngine (lib/ink/mount.ts), que hace el resto fuera de React: ningun
  * render por fotograma. Si WebGL se descarta (sin soporte, chunk que no llega,
  * lentitud sostenida) el canvas se quita y queda la tinta SVG (T1).
@@ -49,16 +49,24 @@ export function InkCanvas({
   initialTier,
   loadEngine = loadGlChunk,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
   // Se decide una vez: las pistas del dispositivo no cambian en la sesion.
   const [tier] = useState<InkTier>(() => initialTier ?? pickInkTier(readDeviceHints()));
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (tier === "T1" || failed || !canvas) return;
+    const host = hostRef.current;
+    if (tier === "T1" || failed || !host) return;
 
-    return mountInkEngine({
+    // Un canvas NUEVO en cada montaje y no uno del JSX: al desmontar, el motor
+    // suelta el contexto (WEBGL_lose_context) y ese canvas ya no sirve; si el
+    // efecto se rehiciera sobre el mismo, la tinta WebGL moriria para siempre.
+    const canvas = document.createElement("canvas");
+    canvas.dataset.inkCanvas = "";
+    canvas.className = "absolute inset-0 block h-full w-full";
+    host.append(canvas);
+
+    const dispose = mountInkEngine({
       canvas,
       tier,
       load: loadEngine,
@@ -67,8 +75,12 @@ export function InkCanvas({
       onActive: onActiveChange,
       onFail: () => setFailed(true),
     });
+    return () => {
+      dispose();
+      canvas.remove();
+    };
   }, [tier, failed, loadEngine, layout, scrollOffset, transitions, onActiveChange]);
 
   if (tier === "T1" || failed) return null;
-  return <canvas ref={canvasRef} data-ink-canvas="" className="absolute inset-0 block h-full w-full" />;
+  return <div ref={hostRef} data-ink-canvas-host="" className="absolute inset-0" />;
 }
