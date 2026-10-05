@@ -33,6 +33,9 @@ export const STAGE_TIMING: Readonly<Record<string, StageTiming>> = {
   trayectoria: { introScreens: 1.2 },
   proyectos: { introScreens: 1 },
   produccion: { introScreens: 1 },
+  poderes: { introScreens: 1 },
+  "fuera-del-codigo": { introScreens: 1.2 },
+  contacto: { introScreens: 1.3 },
 };
 
 /** Fin de la fase "cubrir" de una transicion (fraccion 0..1 de la transicion). */

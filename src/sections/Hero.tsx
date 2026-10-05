@@ -118,8 +118,8 @@ export function Hero() {
               className="mt-7 inline-block bg-shu px-5 py-3 shadow-ink-sm"
             >
               <p className="font-poster text-[clamp(1rem,2.1vw,1.6rem)] uppercase leading-tight tracking-wide text-washi-hi">
-                Desarrollador Full Stack
-                <span className="block">· Líder Técnico ·</span>
+                Ingeniero de Software
+                <span className="block">· Full Stack · Cloud &amp; Serverless ·</span>
               </p>
             </motion.div>
 
@@ -174,7 +174,7 @@ export function Hero() {
                   <source srcSet="/media/img/anthony.avif" type="image/avif" />
                   <img
                     src="/media/img/anthony.webp"
-                    alt="Anthony Gámez, desarrollador full stack, retrato de perfil"
+                    alt="Anthony Gámez, ingeniero de software, retrato de perfil"
                     width={900}
                     height={1200}
                     loading="eager"

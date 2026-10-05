@@ -106,6 +106,22 @@ describe("ScrubReveal en el deck", () => {
     await waitFor(() => expect(node.style.opacity).toBe("1"));
   });
 
+  it("con axis=\"x\" entra en HORIZONTAL desde `distance` (negativa: por la izquierda) y acaba en su sitio", async () => {
+    const { intro } = renderInDeck(
+      <ScrubReveal axis="x" range={[0, 0.5]} distance={-80}>
+        Panel
+      </ScrubReveal>,
+    );
+    const node = screen.getByText("Panel");
+    expect(node.style.transform).toContain("translateX(-80px)");
+    expect(node.style.transform).not.toContain("translateY");
+
+    act(() => intro.set(1));
+
+    await waitFor(() => expect(node.style.opacity).toBe("1"));
+    expect(node.style.transform).toBe("none");
+  });
+
   it("si el teclado enfoca algo dentro, se muestra aunque el scroll no haya llegado (foco visible, WCAG 2.4.7)", async () => {
     renderInDeck(
       <ScrubReveal range={[0.6, 0.9]}>
@@ -207,6 +223,20 @@ describe("ScrubErase en el deck", () => {
     await waitFor(() => expect(node.style.maskImage).toContain("transparent 100%"));
 
     act(() => intro.set(0));
+    await waitFor(() => expect(node.style.maskImage).toBe("none"));
+  });
+
+  it("con direction=\"write\" se ESCRIBE: oculto al principio y sin mascara al acabar su tramo", async () => {
+    const { intro } = renderInDeck(
+      <ScrubErase direction="write" range={[0.2, 0.6]}>
+        Escribeme
+      </ScrubErase>,
+    );
+    const node = screen.getByText("Escribeme");
+    await waitFor(() => expect(node.style.maskImage).toContain("transparent 0%"));
+
+    act(() => intro.set(1));
+
     await waitFor(() => expect(node.style.maskImage).toBe("none"));
   });
 

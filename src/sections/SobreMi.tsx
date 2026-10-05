@@ -66,7 +66,7 @@ export function SobreMi() {
           <ScrubReveal range={BALLOON}>
             <Fukidashi>
               <p className="font-semibold">
-                «De la idea al despliegue — y del despliegue al mantenimiento.»
+                «Un problema no es un obstáculo: es un reto.»
               </p>
             </Fukidashi>
           </ScrubReveal>
@@ -97,12 +97,10 @@ export function SobreMi() {
           <ScrubReveal range={PANEL} distance={40}>
             <InkPanel rotate={1} tone="fine" toneFade className="md:pt-10">
               <p className="text-body text-on-koma-muted">
-                Soy desarrollador Full Stack (React + Django) y{" "}
-                <strong className="text-on-koma">
-                  lidero el equipo de desarrollo en Screen IA
-                </strong>
-                . Diseño, construyo, despliego y mantengo software real en producción — no solo
-                demos.
+                Soy ingeniero de software full stack, enfocado en arquitecturas cloud-native y
+                serverless: el edge de Cloudflare (Workers, Pages, R2) y servicios backend en AWS.{" "}
+                <strong className="text-on-koma">Lo que más disfruto es resolver problemas</strong>:
+                diseño, construyo, despliego y mantengo software real en producción — no solo demos.
               </p>
             </InkPanel>
           </ScrubReveal>

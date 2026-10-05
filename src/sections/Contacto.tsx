@@ -5,8 +5,12 @@ import { Fukidashi } from "@/components/ink/Fukidashi";
 import { InkButton } from "@/components/ink/InkButton";
 import { Sfx } from "@/components/ink/Sfx";
 import { Section } from "@/components/layout/Section";
-import { Reveal } from "@/components/motion/Reveal";
+import { ReachItem } from "@/components/motion/ReachItem";
+import { ScrubErase } from "@/components/motion/ScrubErase";
+import { ScrubReveal } from "@/components/motion/ScrubReveal";
+import { ScrubStamp } from "@/components/motion/ScrubStamp";
 import { STAGGER } from "@/lib/motion";
+import type { ScrubRange } from "@/lib/stage/scrub";
 import { getSectionMeta } from "@/sections/meta";
 
 /** Slug, titulo, kanji y suelo salen del indice: una sola fuente para
@@ -22,6 +26,27 @@ const CV = "/cv/CV-Anthony-Gamez.pdf";
 /** Entrada de los botones de contacto: recorrido corto y rapida, porque son
  *  cinco seguidos. Lo que los encadena es el STAGGER, no la duracion. */
 const BUTTON_REVEAL = { y: 14, amount: 0.6, duration: 0.3 } as const;
+
+/*
+ * Modo escenarios (Fase 4.9), sobre la intro: el globo entra, «ESCRÍBEME» SE
+ * ESCRIBE a pincel de izquierda a derecha (una mascara con el borde difuminado,
+ * medida sobre la palabra: `w-fit`) y se subraya, el ¡ZAS! se estampa y los
+ * botones caen ESTAMPADOS en cascada. Los botones son enlaces: si el teclado
+ * llega antes que el scroll, el foco los muestra. En modo lineal, lo de siempre.
+ */
+const BALLOON: ScrubRange = [0, 0.2];
+const HEADLINE_WRITE: ScrubRange = [0.15, 0.5];
+const UNDERLINE_DRAW: ScrubRange = [0.45, 0.6];
+const SFX_STAMP: ScrubRange = [0.3, 0.42];
+const BUTTONS_START = 0.55;
+const BUTTON_STEP = 0.06;
+const BUTTON_LENGTH = 0.13;
+
+/** El tramo del boton `index`: estampados en cascada. */
+function buttonStamp(index: number): ScrubRange {
+  const start = BUTTONS_START + index * BUTTON_STEP;
+  return [start, start + BUTTON_LENGTH];
+}
 
 /**
  * 08 · Hablemos — suelo KIN (campo oro).
@@ -49,69 +74,90 @@ export function Contacto() {
       hideHeading
     >
       <div className="relative">
-        <Sfx kana="ザッ" rotate={-10} className="absolute right-0 top-0 z-20 hidden lg:block">
-          ¡ZAS!
-        </Sfx>
+        <ScrubStamp range={SFX_STAMP} className="absolute right-0 top-0 z-20 hidden lg:block">
+          <Sfx kana="ザッ" rotate={-10}>
+            ¡ZAS!
+          </Sfx>
+        </ScrubStamp>
 
-        <Reveal y={18} amount={0.4} duration={0.4}>
-          <Fukidashi>
-            <p className="font-body font-bold">
-              ¿Tienes un proyecto en mente? ¿Quieres que te ayude a llevarlo a producción? Escríbeme y lo vemos.
-            </p>
-          </Fukidashi>
-        </Reveal>
+        <ReachItem y={18} amount={0.4} duration={0.4}>
+          <ScrubReveal range={BALLOON}>
+            <Fukidashi>
+              <p className="font-body font-bold">
+                ¿Tienes un proyecto en mente? ¿Quieres que te ayude a llevarlo a producción? Escríbeme y lo vemos.
+              </p>
+            </Fukidashi>
+          </ScrubReveal>
+        </ReachItem>
 
         {/* El titular de la plancha. Es un <p> y no un encabezado: el h2 real
             ya esta arriba en sr-only y duplicarlo solo seria ruido. */}
-        <p className="mt-12 font-poster text-poster uppercase leading-none text-[var(--g-heading)]">
-          Escríbeme
-        </p>
-        <BrushStroke className="mt-1 h-4 w-56 sm:w-80" strokeWidth={5} delay={0.15} />
+        <ScrubErase direction="write" range={HEADLINE_WRITE} className="w-fit">
+          <p className="mt-12 font-poster text-poster uppercase leading-none text-[var(--g-heading)]">
+            Escríbeme
+          </p>
+        </ScrubErase>
+        <BrushStroke
+          className="mt-1 h-4 w-56 sm:w-80"
+          strokeWidth={5}
+          delay={0.15}
+          scrub={{ range: UNDERLINE_DRAW }}
+        />
 
         <ul className="mt-10 flex flex-wrap gap-3">
-          <Reveal as="li" {...BUTTON_REVEAL} delay={0 * STAGGER}>
-            <InkButton variant="primary" href={`mailto:${EMAIL}`}>
-              <Mail size={18} strokeWidth={3} aria-hidden="true" />
-              Email
-            </InkButton>
-          </Reveal>
+          <ReachItem as="li" {...BUTTON_REVEAL} delay={0 * STAGGER}>
+            <ScrubStamp range={buttonStamp(0)}>
+              <InkButton variant="primary" href={`mailto:${EMAIL}`}>
+                <Mail size={18} strokeWidth={3} aria-hidden="true" />
+                Email
+              </InkButton>
+            </ScrubStamp>
+          </ReachItem>
 
-          <Reveal as="li" {...BUTTON_REVEAL} delay={1 * STAGGER}>
-            <InkButton
-              variant="accent"
-              href={WHATSAPP}
-              ariaLabel="Escribir a Anthony Gámez por WhatsApp"
-            >
-              <WhatsappIcon size={18} />
-              WhatsApp
-            </InkButton>
-          </Reveal>
+          <ReachItem as="li" {...BUTTON_REVEAL} delay={1 * STAGGER}>
+            <ScrubStamp range={buttonStamp(1)}>
+              <InkButton
+                variant="accent"
+                href={WHATSAPP}
+                ariaLabel="Escribir a Anthony Gámez por WhatsApp"
+              >
+                <WhatsappIcon size={18} />
+                WhatsApp
+              </InkButton>
+            </ScrubStamp>
+          </ReachItem>
 
-          <Reveal as="li" {...BUTTON_REVEAL} delay={2 * STAGGER}>
-            <InkButton variant="ghost" href={LINKEDIN}>
-              <LinkedinIcon size={18} />
-              LinkedIn
-            </InkButton>
-          </Reveal>
+          <ReachItem as="li" {...BUTTON_REVEAL} delay={2 * STAGGER}>
+            <ScrubStamp range={buttonStamp(2)}>
+              <InkButton variant="ghost" href={LINKEDIN}>
+                <LinkedinIcon size={18} />
+                LinkedIn
+              </InkButton>
+            </ScrubStamp>
+          </ReachItem>
 
-          <Reveal as="li" {...BUTTON_REVEAL} delay={3 * STAGGER}>
-            <InkButton variant="ghost" href={GITHUB}>
-              <GithubIcon size={18} />
-              GitHub
-            </InkButton>
-          </Reveal>
+          <ReachItem as="li" {...BUTTON_REVEAL} delay={3 * STAGGER}>
+            <ScrubStamp range={buttonStamp(3)}>
+              <InkButton variant="ghost" href={GITHUB}>
+                <GithubIcon size={18} />
+                GitHub
+              </InkButton>
+            </ScrubStamp>
+          </ReachItem>
 
-          <Reveal as="li" {...BUTTON_REVEAL} delay={4 * STAGGER}>
-            <InkButton
-              variant="ghost"
-              href={CV}
-              download
-              ariaLabel="Descargar el currículum de Anthony Gámez en PDF"
-            >
-              <FileDown size={18} strokeWidth={3} aria-hidden="true" />
-              Mi CV
-            </InkButton>
-          </Reveal>
+          <ReachItem as="li" {...BUTTON_REVEAL} delay={4 * STAGGER}>
+            <ScrubStamp range={buttonStamp(4)}>
+              <InkButton
+                variant="ghost"
+                href={CV}
+                download
+                ariaLabel="Descargar el currículum de Anthony Gámez en PDF"
+              >
+                <FileDown size={18} strokeWidth={3} aria-hidden="true" />
+                Mi CV
+              </InkButton>
+            </ScrubStamp>
+          </ReachItem>
         </ul>
 
         <address className="mt-10 flex flex-col items-start gap-2 not-italic">

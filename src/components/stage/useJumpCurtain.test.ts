@@ -69,7 +69,12 @@ describe("useJumpCurtain", () => {
   });
 
   it("un salto nuevo ANTES de que cubra solo cambia el destino: la cortina no se reinicia", async () => {
-    duration.ms = 400; // cubre a ~200 ms: hay margen de sobra para pedir el segundo salto en medio
+    // Larga a proposito (cubre a ~1 s): con la suite entera en paralelo los
+    // fotogramas llegan tarde, y con 400 ms una espera FIJA de 100 ms caia a
+    // veces antes de que la cortina arrancase o despues de cubrir (intermitente).
+    // Aqui se espera a que haya ARRANCADO de verdad, y el margen hasta cubrir es
+    // de casi un segundo.
+    duration.ms = 2000;
     const { result } = renderHook(() => useJumpCurtain());
     const first = vi.fn();
     const second = vi.fn();
@@ -77,9 +82,9 @@ describe("useJumpCurtain", () => {
     result.current.curtain.on("change", (value) => values.push(value));
 
     result.current.run(first);
-    await wait(100);
+    await waitFor(() => expect(Math.max(0, ...values)).toBeGreaterThan(0.1), { interval: 5 });
     const beforeSecond = values.length;
-    expect(Math.max(...values)).toBeGreaterThan(0.1); // la cortina ya va por su camino
+    expect(first).not.toHaveBeenCalled(); // aun no ha cubierto
     result.current.run(second);
     await waitFor(() => expect(second).toHaveBeenCalledTimes(1));
 

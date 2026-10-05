@@ -29,9 +29,9 @@ export const timeline: readonly Milestone[] = [
   {
     id: "screenia",
     org: "Screen IA",
-    role: "Líder de Equipo de Desarrollo",
+    role: "Desarrollador Full Stack",
     period: "Feb 2026 – actualidad",
-    body: "De programador a líder de equipo. Sprints, revisión de pull requests, GitFlow, Docker y AWS — y la responsabilidad de definir cómo escribe código todo el equipo.",
+    body: "Producto real en producción: React, Django, Docker y despliegues en AWS y Cloudflare. Además coordino a un pequeño equipo de practicantes: sprints, revisión de pull requests y GitFlow.",
     pow: "¡POW!",
   },
 ] as const;

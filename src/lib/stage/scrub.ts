@@ -80,6 +80,19 @@ export function eraseMask(progress: number, range: ScrubRange): string {
   return `linear-gradient(to right, transparent ${round2(from)}%, #000 ${round2(to)}%)`;
 }
 
+/**
+ * La mascara al reves: un texto que se ESCRIBE de izquierda a derecha, con el
+ * mismo borde difuminado (un pincel que avanza). Antes del tramo lo oculta
+ * entero; al acabarlo no hay mascara ("none"): nitido y sin coste.
+ */
+export function writeMask(progress: number, range: ScrubRange): string {
+  const t = scrubT(progress, range);
+  if (t === 1) return "none";
+  const to = t * (100 + SCRUB_ERASE_FEATHER_PCT);
+  const from = to - SCRUB_ERASE_FEATHER_PCT;
+  return `linear-gradient(to right, #000 ${round2(from)}%, transparent ${round2(to)}%)`;
+}
+
 /** Dos decimales: el navegador no distingue mas y la cadena queda corta. */
 function round2(value: number): number {
   return Math.round(value * 100) / 100;

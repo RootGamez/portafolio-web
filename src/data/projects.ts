@@ -62,11 +62,11 @@ export const projects: readonly Project[] = [
     title: "AdFlow — ScreenIA",
     tagline:
       "Marketplace de pantallas publicitarias digitales (DOOH): explora, compara y reserva pantallas por ubicación, tráfico y precio.",
-    role: "Líder de Equipo de Desarrollo",
+    role: "Desarrollador full stack",
     bullets: [
-      "Lidero el equipo: sprints, revisión de pull requests y estándares de código.",
-      "Arquitectura de microservicios y definición de las buenas prácticas del equipo.",
+      "Arquitectura de microservicios, contenerizada con Docker y desplegada en AWS.",
       "Producto en producción con dominio propio, DNS y despliegue gestionados por mí.",
+      "Coordino a un pequeño equipo de practicantes: sprints, revisión de pull requests y estándares de código.",
     ],
     stack: ["React", "Django REST", "Flutter Web", "AWS", "Docker"],
     status: "privado",
@@ -101,11 +101,11 @@ export const projects: readonly Project[] = [
       "La web del negocio familiar. Landing con SEO local real, pensada para que el vecino de Pisco encuentre la pizza antes que la competencia.",
     role: "Desarrollador y responsable del despliegue",
     bullets: [
-      "Arquitectura documentada en un blueprint por fases (landing → catálogo → CMS).",
       "SEO local completo: schema.org, Open Graph y metadatos por ciudad.",
+      "Envío de correos a los clientes con una función serverless en AWS Lambda.",
       "Sitio estático en Cloudflare Pages con dominio y DNS propios.",
     ],
-    stack: ["Next.js 15", "Tailwind 4", "TypeScript", "Cloudflare Pages"],
+    stack: ["Next.js 15", "Tailwind 4", "TypeScript", "Cloudflare Pages", "AWS Lambda"],
     status: "produccion",
     liveUrl: "https://saborllanero.online/",
     repoUrl: "https://github.com/RootGamez/Landing-Sabor-Llanero",

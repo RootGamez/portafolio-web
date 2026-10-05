@@ -27,8 +27,8 @@ function renderInDeck() {
 const animated = (node: HTMLElement) => node.closest<HTMLElement>("[style*='opacity']");
 const opacityOf = (node: HTMLElement) => animated(node)?.style.opacity;
 
-const balloon = () => screen.getByText(/De la idea al despliegue/);
-const panel = () => screen.getByText(/lidero el equipo de desarrollo/);
+const balloon = () => screen.getByText(/Un problema no es un obstáculo/);
+const panel = () => screen.getByText(/Lo que más disfruto es resolver problemas/);
 const sfx = () => screen.getByText("¡POW!");
 const buttons = () => [
   screen.getByRole("link", { name: "Ver mis proyectos" }),

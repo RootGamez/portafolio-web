@@ -14,8 +14,14 @@ type Props = {
   readonly range: ScrubRange;
   /** Sobre que avance se mide el tramo. Por defecto la intro del escenario. */
   readonly over?: ScrubOver;
-  /** Px que sube al aparecer. */
+  /**
+   * Px de recorrido al aparecer: en vertical sube desde `distance` px mas abajo;
+   * en horizontal (`axis="x"`) llega desde `distance` px a un lado (negativo:
+   * por la izquierda).
+   */
   readonly distance?: number;
+  /** Eje de la entrada. Por defecto vertical. */
+  readonly axis?: "x" | "y";
   /** Etiqueta a renderizar. `li` cuando el padre es una lista, o el HTML se rompe. */
   readonly as?: ScrubTag;
   readonly className?: string;
@@ -46,6 +52,7 @@ export function ScrubReveal({
   range,
   over = "intro",
   distance = SCRUB_REVEAL_DISTANCE_PX,
+  axis = "y",
   as = "div",
   className = "",
 }: Props) {
@@ -54,7 +61,11 @@ export function ScrubReveal({
   const opacity = useTransform(() =>
     focused.get() ? 1 : revealFrame(progress.get(), range, distance).opacity,
   );
-  const y = useTransform(() => (focused.get() ? 0 : revealFrame(progress.get(), range, distance).y));
+  // El desplazamiento que queda por recorrer (revealFrame lo llama `y`; aqui
+  // se aplica al eje pedido).
+  const offset = useTransform(() =>
+    focused.get() ? 0 : revealFrame(progress.get(), range, distance).y,
+  );
   const Component = TAG[as];
 
   if (mode === "linear") return <Component className={className}>{children}</Component>;
@@ -62,7 +73,7 @@ export function ScrubReveal({
   return (
     <Component
       className={className}
-      style={{ opacity, y }}
+      style={axis === "x" ? { opacity, x: offset } : { opacity, y: offset }}
       onFocus={onFocus}
       onBlur={onBlur}
     >

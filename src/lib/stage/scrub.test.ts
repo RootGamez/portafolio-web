@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { SCRUB_DRAW_MIN_VISIBLE, SCRUB_ERASE_FEATHER_PCT } from "./config";
-import { drawFrame, eraseMask, parallaxY, reachProgress, revealFrame, scrubT, stampFrame } from "./scrub";
+import {
+  drawFrame,
+  eraseMask,
+  parallaxY,
+  reachProgress,
+  revealFrame,
+  scrubT,
+  stampFrame,
+  writeMask,
+} from "./scrub";
 
 describe("scrubT: avance lineal 0..1 dentro de un tramo del progreso del escenario", () => {
   it("vale 0 antes del tramo, 1 despues y es lineal dentro", () => {
@@ -156,5 +165,31 @@ describe("reachProgress: cuanto ha cruzado la linea de lectura a un elemento", (
 
   it("una lectura NaN cuenta como no leido", () => {
     expect(reachProgress(Number.NaN, 200, 400)).toBe(0);
+  });
+});
+
+describe("writeMask: el texto se ESCRIBE de izquierda a derecha (el borrado, al reves)", () => {
+  const F = SCRUB_ERASE_FEATHER_PCT;
+  const writtenUpTo = (mask: string) => Number(/#000 (-?[\d.]+)%/.exec(mask)?.[1]);
+
+  it("antes del tramo no hay nada escrito: la mascara lo oculta entero", () => {
+    expect(writeMask(0, [0.2, 0.8])).toBe(`linear-gradient(to right, #000 ${-F}%, transparent 0%)`);
+  });
+
+  it("al acabar el tramo esta escrito entero y sin mascara (nitido y sin coste)", () => {
+    expect(writeMask(0.8, [0.2, 0.8])).toBe("none");
+    expect(writeMask(1, [0.2, 0.8])).toBe("none");
+  });
+
+  it("el trazo avanza siempre hacia la derecha con el mismo borde difuminado", () => {
+    let previous = -Infinity;
+    for (let p = 0.25; p < 0.8; p += 0.05) {
+      const mask = writeMask(p, [0.2, 0.8]);
+      const from = writtenUpTo(mask);
+      const to = Number(/transparent (-?[\d.]+)%/.exec(mask)?.[1]);
+      expect(from).toBeGreaterThan(previous);
+      expect(to - from).toBeCloseTo(F);
+      previous = from;
+    }
   });
 });
