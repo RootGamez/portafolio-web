@@ -401,6 +401,37 @@ html[data-deck="on"]::-webkit-scrollbar {
   display: none;
 }
 
+/* Pan del deck en el COMPOSITOR (Fase 4M). El contenido de un escenario que no
+   cabe sube 1:1 con el scroll; con una linea de tiempo de scroll eso lo mueve el
+   navegador al ritmo del dedo, sin esperar a JS (que llegaba uno o mas fotogramas
+   tarde en movil y se sentia pesado). El tramo lo escribe StageLayer en px del
+   documento (`panSpan` + origen de la pista) y solo cambia al volver a medir.
+   Sin soporte, StageLayer no pone la clase y el pan sigue yendo por JS.
+   OJO: con `fill-mode: both` el contenido lleva SIEMPRE una transform (tambien
+   `translateY(0)` en un escenario que cabe), asi que crea contexto de apilado y
+   es el bloque contenedor de cualquier `position: fixed` de dentro. No meter
+   elementos `fixed` en un escenario (con el pan por JS ya fallaban al subir). */
+@keyframes stage-pan {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-1 * var(--pan-distance, 0px)));
+  }
+}
+
+@supports (animation-timeline: scroll()) and (animation-range: 0px 1px) {
+  .stage-pan {
+    animation-name: stage-pan;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    /* Despues de las demas: el atajo `animation` (si alguien lo pone) la resetea. */
+    animation-timeline: scroll(root block);
+    animation-range: var(--pan-start, 0px) calc(var(--pan-start, 0px) + var(--pan-distance, 0px));
+  }
+}
+
 /* Modo lineal: con la barra de nav fija arriba (<1024px) el navegador alinea el
    elemento enfocado al borde de la ventana y lo dejaria tapado por la barra
    (WCAG 2.4.11). En el deck no aplica: el visor ya empieza bajo la barra. */

@@ -232,6 +232,22 @@ export function panFor(layout: Layout, index: number, scroll: number): number {
   return clamp(finiteOr(scroll, 0) - stage.start - stage.introLength, 0, stage.panLength);
 }
 
+/** Tramo del scroll de la pista `[start, end]` en que sube el contenido de un escenario. */
+export type PanSpan = { readonly start: number; readonly end: number };
+
+/**
+ * El pan como TRAMO: dentro de el, el contenido sube 1:1 con el scroll; antes
+ * esta en 0 y despues en su maximo (`end - start`). Es `panFor` dicho de forma
+ * que lo entiende una animacion CSS ligada al scroll (`animation-range`), que el
+ * navegador mueve en el compositor, al ritmo del dedo. null si no sube nada.
+ */
+export function panSpan(layout: Layout, index: number): PanSpan | null {
+  const stage: StageSegment | undefined = layout.stages[index];
+  if (!stage || stage.panLength === 0) return null;
+  const start = stage.start + stage.introLength;
+  return { start, end: start + stage.panLength };
+}
+
 /**
  * Scroll en el que el contenido de un escenario ha subido exactamente `pan` px
  * (recortado a 0..panLength). Inversa de `panFor`: sirve para llevar el scroll
@@ -263,7 +279,9 @@ export function stageProgress(layout: Layout, index: number, scroll: number): nu
  *     fondo del contenido, si el escenario cabe pero pasa de la linea);
  *   - durante el pan el contenido sube y la linea baja a la vez, del
  *     `lineRatio` del visor a su borde: al acabar el escenario TODO esta leido
- *     (con la linea quieta, lo ultimo nunca se completaria).
+ *     (con la linea quieta, lo ultimo nunca se completaria). Con un `lineRatio`
+ *     mayor que 1 (movil: la linea va por DEBAJO del visor) eso ya ocurre con la
+ *     linea quieta, asi que se queda a esa distancia del borde todo el pan.
  */
 export function readingLine(
   layout: Layout,
@@ -283,7 +301,10 @@ export function readingLine(
   if (s < stage.introLength) return start + ((introEnd - start) * s) / stage.introLength;
   if (stage.panLength === 0) return introEnd;
   const panT = clamp((s - stage.introLength) / stage.panLength, 0, 1);
-  return line + (stage.contentLength - line) * panT;
+  // Donde acaba la linea: el fondo del contenido o, si la linea va por debajo
+  // del visor, la misma distancia bajo el borde que al empezar el pan.
+  const panEnd = Math.max(stage.contentLength, line + stage.panLength);
+  return line + (panEnd - line) * panT;
 }
 
 /**

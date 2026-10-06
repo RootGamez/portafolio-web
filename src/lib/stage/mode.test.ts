@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   getLocalStorage,
   isDeckEligible,
   readMotionOptOut,
   resolveDeckMode,
+  SCROLL_TIMELINE_CONDITION,
+  supportsScrollTimeline,
   supportsSticky,
   writeMotionOptOut,
   type DeckInputs,
 } from "./mode";
 import { MOTION_OFF_VALUE, MOTION_STORAGE_KEY } from "./config";
+
+// Con `?raw` vitest entrega un .css vacio (lo procesa aparte): se lee del disco.
+const appCss = readFileSync("src/styles/app.css", "utf-8");
 
 const FREE: DeckInputs = {
   prefersReducedMotion: false,
@@ -134,6 +140,32 @@ describe("supportsSticky", () => {
   it("es false si no hay API de CSS (no se puede asegurar: se prefiere lineal)", () => {
     expect(supportsSticky(undefined)).toBe(false);
     expect(supportsSticky({} as never)).toBe(false);
+  });
+});
+
+describe("supportsScrollTimeline", () => {
+  it("exige la linea de tiempo de scroll Y el rango en px (el pan usa los dos)", () => {
+    const supports = vi.fn(() => true);
+    expect(supportsScrollTimeline({ supports })).toBe(true);
+    expect(supports).toHaveBeenCalledWith(SCROLL_TIMELINE_CONDITION);
+    expect(SCROLL_TIMELINE_CONDITION).toContain("(animation-timeline: scroll())");
+    expect(SCROLL_TIMELINE_CONDITION).toContain("(animation-range: 0px 1px)");
+  });
+
+  it("pregunta EXACTAMENTE lo mismo que el @supports de .stage-pan (si no, el pan se quedaria quieto)", () => {
+    // Con JS diciendo "si" y CSS "no", nadie moveria el contenido. Se exige que
+    // `.stage-pan` sea la regla de ESE bloque, no solo que el texto aparezca.
+    const escaped = SCROLL_TIMELINE_CONDITION.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    expect(appCss).toMatch(new RegExp(`@supports ${escaped}\\s*\\{\\s*\\.stage-pan\\s*\\{`));
+  });
+
+  it("es false si el navegador responde que no", () => {
+    expect(supportsScrollTimeline({ supports: () => false })).toBe(false);
+  });
+
+  it("es false si no hay API de CSS (queda el pan por JS de siempre)", () => {
+    expect(supportsScrollTimeline(undefined)).toBe(false);
+    expect(supportsScrollTimeline({} as never)).toBe(false);
   });
 });
 

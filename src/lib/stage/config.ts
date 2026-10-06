@@ -172,6 +172,19 @@ export const READING_LINE_START = 0.3;
 export const READING_LINE_RATIO = 0.8;
 
 /**
+ * La linea de lectura en pantallas estrechas (COMPACT_VIEWPORT_QUERY): POR DEBAJO
+ * del borde del visor. En un telefono una tarjeta mide casi una pantalla y con la
+ * linea en 0,8 entraba como un hueco transparente que tardaba ~300 px en verse
+ * ("como si le costara cargar", medido el 2026-10-05). A 1,1 lo que entra ya llega
+ * casi revelado y queda solido enseguida; lo que se ve al empezar el escenario
+ * sigue animandose durante la intro. Decision del usuario (Fase 4M).
+ */
+export const READING_LINE_RATIO_COMPACT = 1.1;
+
+/** Pantallas estrechas: las de una sola columna (el `md` de Tailwind empieza en 768). */
+export const COMPACT_VIEWPORT_QUERY = "(max-width: 767px)";
+
+/**
  * Alcance (0..1, ver `ScrubReach`) a partir del cual una tarjeta de proyecto ya
  * ha ENTRADO y su video puede reproducirse. Antes la tarjeta aun es invisible:
  * con las capas apiladas el `IntersectionObserver` la da "en pantalla" mientras

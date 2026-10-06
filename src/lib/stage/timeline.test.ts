@@ -9,6 +9,7 @@ import {
   readingLine,
   offsetOfStage,
   panFor,
+  panSpan,
   scrollForPan,
   smoothstep,
   stageProgress,
@@ -316,6 +317,33 @@ describe("scrollForPan", () => {
   });
 });
 
+describe("panSpan: el tramo del scroll en que sube el contenido (lo anima el compositor)", () => {
+  it("empieza al acabar la intro y dura lo que desborda el contenido", () => {
+    // E1: start 1280 + intro 480 = 1760; pan 600 -> 2360.
+    expect(panSpan(layout, 1)).toEqual({ start: 1760, end: 2360 });
+  });
+
+  it("es exactamente panFor: 0 antes, 1:1 dentro y el maximo despues (la animacion CSS es lineal)", () => {
+    const span = panSpan(layout, 1);
+    if (!span) throw new Error("E1 desborda: tiene que tener tramo");
+    const distance = span.end - span.start;
+    for (let s = 0; s <= 3640; s += 17) {
+      const linear = Math.min(Math.max(s - span.start, 0), distance);
+      expect(panFor(layout, 1, s)).toBe(linear);
+    }
+  });
+
+  it("un escenario que cabe no tiene tramo (nada que animar)", () => {
+    expect(panSpan(layout, 0)).toBeNull();
+    expect(panSpan(layout, 2)).toBeNull();
+  });
+
+  it("un indice inexistente o un layout vacio no tienen tramo", () => {
+    expect(panSpan(layout, 9)).toBeNull();
+    expect(panSpan(EMPTY_LAYOUT, 0)).toBeNull();
+  });
+});
+
 describe("stageProgress", () => {
   it("vale 0 antes del escenario, 1 despues y la fraccion dentro", () => {
     expect(stageProgress(layout, 1, 100)).toBe(0);
@@ -410,6 +438,37 @@ describe("readingLine: la linea de lectura, en px del CONTENIDO del escenario", 
   it("un indice inexistente da 0; un scroll no finito, el arranque", () => {
     expect(read(100, 9)).toBe(0);
     expect(read(Number.NaN)).toBe(200);
+  });
+
+  describe("con la linea POR DEBAJO del visor (movil: lo que entra ya llega casi revelado)", () => {
+    // Linea a 1,1 del visor de 800 = 880 px. E1: pan 600 (1760..2360).
+    const below = (scroll: number) => readingLine(layout, 1, scroll, 0.25, 1.1);
+
+    it("en la intro baja del arranque a la linea, como siempre", () => {
+      expect(below(1280)).toBe(200);
+      expect(below(1760)).toBeCloseTo(880);
+    });
+
+    it("durante el pan se queda a la MISMA distancia bajo el borde del visor", () => {
+      // En coordenadas del visor: linea - pan = 880 en todo el pan.
+      for (let pan = 0; pan <= 600; pan += 50) {
+        expect(below(1760 + pan) - pan).toBeCloseTo(880);
+      }
+    });
+
+    it("al acabar el escenario todo esta leido", () => {
+      expect(below(2360)).toBeGreaterThanOrEqual(1400);
+    });
+
+    it("es continua y monotona", () => {
+      let previous = 0;
+      for (let s = 1200; s <= 2400; s += 10) {
+        const r = below(s);
+        expect(r).toBeGreaterThanOrEqual(previous);
+        expect(r - (previous || r)).toBeLessThanOrEqual(15);
+        previous = r;
+      }
+    });
   });
 });
 

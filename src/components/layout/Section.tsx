@@ -82,8 +82,14 @@ export function Section({
         {jp}
       </VerticalKanji>
 
+      {/* En movil el canalon DERECHO es mayor (28 px frente a 16): la sombra dura
+          de paneles y tarjetas sale 8 px a la derecha y, con su leve giro, acababa
+          a 0-6 px del borde o cortada (medido a 390 px, 2026-10-05). Asi el
+          conjunto panel + sombra queda centrado. Va aqui y no en cada panel
+          porque los SFX cuelgan del envoltorio, no del panel; y lo unico centrado
+          (el sello de Fin) tambien lleva su sombra a la derecha. */}
       <div
-        className={`relative z-[1] ${bleed ? "" : "mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10"} py-16 sm:py-24 lg:py-28 ${innerClassName}`}
+        className={`relative z-[1] ${bleed ? "" : "mx-auto max-w-[1440px] pl-4 pr-7 sm:px-6 lg:px-10"} py-16 sm:py-24 lg:py-28 ${innerClassName}`}
       >
         {!hideHeading && (
           <header className={`mb-10 ${bleed ? "px-4 sm:px-6 lg:px-10" : ""}`}>

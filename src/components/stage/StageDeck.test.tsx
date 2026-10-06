@@ -5,9 +5,15 @@ import type { MotionValue } from "motion/react";
 import { DeckProvider, useDeck } from "./DeckContext";
 import { StageDeck } from "./StageDeck";
 import { useStage } from "./StageContext";
-import { READING_LINE_RATIO, READING_LINE_START } from "@/lib/stage/config";
+import {
+  COMPACT_VIEWPORT_QUERY,
+  READING_LINE_RATIO,
+  READING_LINE_RATIO_COMPACT,
+  READING_LINE_START,
+} from "@/lib/stage/config";
 import { Scene, STAGES, stubStageGeometry } from "@/test/stageGeometry";
 import { elementsUnderResizeObservation, triggerResize } from "@/test/setup";
+import { installMatchMedia, restoreCss, stubCssSupports } from "@/test/doubles";
 import stageDeckSource from "./StageDeck.tsx?raw";
 import stageLayerSource from "./StageLayer.tsx?raw";
 import stageNavigationSource from "./useStageNavigation.ts?raw";
@@ -44,6 +50,7 @@ describe("StageDeck", () => {
   });
 
   afterEach(() => {
+    restoreCss();
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
     window.history.replaceState(null, "", "/");
   });
@@ -148,6 +155,76 @@ describe("StageDeck", () => {
     await waitFor(() => expect(reading!.get()).toBeCloseTo(1400));
   });
 
+  it("en pantallas estrechas la linea de lectura va POR DEBAJO del visor: lo que entra ya llega casi revelado", async () => {
+    installMatchMedia({ [COMPACT_VIEWPORT_QUERY]: true });
+    let reading: MotionValue<number> | null = null;
+    function ReadingProbe() {
+      reading = useStage().reading;
+      return null;
+    }
+    const stages = STAGES.map((stage, index) =>
+      index === 1
+        ? {
+            ...stage,
+            node: (
+              <>
+                <ReadingProbe />
+                <Scene id={stage.slug} height={1400} />
+              </>
+            ),
+          }
+        : stage,
+    );
+    render(
+      <DeckProvider>
+        <StageDeck stages={stages} />
+      </DeckProvider>,
+    );
+
+    // E1: al acabar la intro (1760) la linea esta a 1,1 visores; a mitad del pan
+    // (300 px) sigue a la misma distancia del borde del visor.
+    const line = READING_LINE_RATIO_COMPACT * 800;
+    setScrollY(1760);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(line));
+    setScrollY(2060);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(line + 300));
+  });
+
+  it("si la pantalla cruza el limite con la pagina abierta (girar, redimensionar), la linea cambia en el acto", async () => {
+    const media = installMatchMedia({ [COMPACT_VIEWPORT_QUERY]: false });
+    let reading: MotionValue<number> | null = null;
+    function ReadingProbe() {
+      reading = useStage().reading;
+      return null;
+    }
+    const stages = STAGES.map((stage, index) =>
+      index === 1
+        ? {
+            ...stage,
+            node: (
+              <>
+                <ReadingProbe />
+                <Scene id={stage.slug} height={1400} />
+              </>
+            ),
+          }
+        : stage,
+    );
+    render(
+      <DeckProvider>
+        <StageDeck stages={stages} />
+      </DeckProvider>,
+    );
+    setScrollY(1760);
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(READING_LINE_RATIO * 800));
+
+    act(() => media.change(COMPACT_VIEWPORT_QUERY, true));
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(READING_LINE_RATIO_COMPACT * 800));
+
+    act(() => media.change(COMPACT_VIEWPORT_QUERY, false));
+    await waitFor(() => expect(reading!.get()).toBeCloseTo(READING_LINE_RATIO * 800));
+  });
+
   it("al principio solo el primer escenario es interactivo: el resto va inert", () => {
     renderDeck();
 
@@ -208,12 +285,61 @@ describe("StageDeck", () => {
     expect(track()).toHaveAttribute("data-stage-active", "0");
   });
 
-  it("el contenido que desborda sube 1:1 con el scroll", async () => {
+  it("sin lineas de tiempo de scroll, el contenido que desborda sube 1:1 por JS", async () => {
+    stubCssSupports(false);
     renderDeck();
 
     setScrollY(2060); // E1: intro hasta 1760, luego pan = 2060 - 1760 = 300
 
     await waitFor(() => expect(content(1).style.transform).toContain("-300px"));
+    // Y nada del camino CSS: ni la clase ni su tramo.
+    expect(content(1)).not.toHaveClass("stage-pan");
+    expect(content(1).style.getPropertyValue("--pan-start")).toBe("");
+    expect(content(1).style.getPropertyValue("--pan-distance")).toBe("");
+  });
+
+  describe("con lineas de tiempo de scroll en CSS, el pan lo anima el COMPOSITOR", () => {
+    // El `CSS` de jsdom no trae `supports`: sin este doble el deck usa el pan por
+    // JS (el de arriba). Lo deshace el `restoreCss()` del afterEach general.
+    beforeEach(() => stubCssSupports(true));
+
+    it("el contenido lleva su tramo de pan en px del documento y la clase que lo anima", async () => {
+      renderDeck();
+
+      // E1: el pan empieza en 1760 y sube 600 px, en el scroll de la pista, que empieza en 0.
+      await waitFor(() => expect(content(1).style.getPropertyValue("--pan-start")).toBe("1760px"));
+      expect(content(1).style.getPropertyValue("--pan-distance")).toBe("600px");
+      expect(content(1)).toHaveClass("stage-pan");
+    });
+
+    it("el tramo cuenta donde empieza la pista en el documento (una cabecera encima la empuja)", async () => {
+      stubStageGeometry({ trackTop: 200 });
+      renderDeck();
+
+      await waitFor(() => expect(content(1).style.getPropertyValue("--pan-start")).toBe("1960px"));
+      expect(content(1).style.getPropertyValue("--pan-distance")).toBe("600px");
+    });
+
+    it("un escenario que cabe no sube nada", async () => {
+      renderDeck();
+
+      // Antes de medir TODAS valen 0px (layout vacio): se espera a que E1 tenga su
+      // tramo para que el 0 de E0 sea el de la medida y no el de partida.
+      await waitFor(() => expect(content(1).style.getPropertyValue("--pan-distance")).toBe("600px"));
+      expect(content(0).style.getPropertyValue("--pan-distance")).toBe("0px");
+    });
+
+    it("JS no escribe ninguna transform al hacer scroll (no pelea con la animacion CSS)", async () => {
+      renderDeck();
+      await waitFor(() => expect(content(1).style.getPropertyValue("--pan-start")).toBe("1760px"));
+
+      setScrollY(2060);
+
+      // Se espera a algo que Motion escribe en su fotograma (la visibilidad de la
+      // capa): para entonces, una `y` enlazada ya habria escrito su transform.
+      await waitFor(() => expect(layer(1).style.visibility).toBe("visible"));
+      expect(content(1).style.transform).toBe("");
+    });
   });
 
   describe("el cambio de escenario durante una transicion es DURO y ocurre en SWAP_AT", () => {

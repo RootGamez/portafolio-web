@@ -8,8 +8,16 @@ import {
   type ReactNode,
 } from "react";
 import { useMotionValue, useMotionValueEvent, useTransform } from "motion/react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useWindowScrollY } from "@/hooks/useWindowScrollY";
-import { NEAR_RANGE, REANCHOR_TOLERANCE_PX } from "@/lib/stage/config";
+import {
+  COMPACT_VIEWPORT_QUERY,
+  NEAR_RANGE,
+  READING_LINE_RATIO,
+  READING_LINE_RATIO_COMPACT,
+  REANCHOR_TOLERANCE_PX,
+} from "@/lib/stage/config";
+import { supportsScrollTimeline } from "@/lib/stage/mode";
 import { stageIndexFromHash } from "@/lib/stage/navigation";
 import { revealDelta } from "@/lib/stage/reveal";
 import { TRANSITIONS } from "@/lib/stage/transitions";
@@ -109,6 +117,12 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
   // Si se llega desde el modo lineal se arranca YA en ese escenario: escribir un 0
   // inicial en el estado compartido haria perder el sitio (ver useRestoreIndex).
   const [active, setActive] = useState(restoreIndex ?? 0);
+  // El soporte del navegador no cambia en la sesion: se pregunta una vez.
+  // `globalThis.CSS` (no `CSS`): sin API de CSS vale undefined en vez de lanzar.
+  const [compositorPan] = useState(() => supportsScrollTimeline(globalThis.CSS));
+  // En una pantalla estrecha la linea de lectura va bajo el visor (ver config.ts).
+  const compact = useMediaQuery(COMPACT_VIEWPORT_QUERY);
+  const readingLineRatio = compact ? READING_LINE_RATIO_COMPACT : READING_LINE_RATIO;
   const count = stages.length;
   // Las intros, como cadena: `measure` solo se rehace si CAMBIAN, no cada vez
   // que el llamador cree un array `stages` nuevo con los mismos valores.
@@ -331,6 +345,9 @@ export function StageDeck({ stages, restoreIndex = null }: Props) {
             index={index}
             layout={layout}
             scrollOffset={scrollOffset}
+            origin={origin}
+            compositorPan={compositorPan}
+            readingLineRatio={readingLineRatio}
             isActive={index === active}
             isNear={Math.abs(index - active) <= NEAR_RANGE}
             onFocusInside={revealFocused}

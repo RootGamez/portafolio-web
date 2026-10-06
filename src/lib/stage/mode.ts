@@ -92,5 +92,23 @@ export function supportsSticky(css: CssApi | undefined): boolean {
 
 /** Version con el `CSS` global del navegador. */
 export function detectStickySupport(): boolean {
-  return supportsSticky(typeof CSS === "undefined" ? undefined : CSS);
+  // `globalThis.CSS` (no `CSS`): sin API de CSS vale undefined en vez de lanzar.
+  return supportsSticky(globalThis.CSS);
+}
+
+/**
+ * La condicion del `@supports` de `.stage-pan` (app.css), LETRA POR LETRA: si JS
+ * creyera que hay soporte y el CSS no, nadie moveria el contenido. Hacen falta
+ * las dos: sin `animation-range` la animacion recorreria la pagina entera.
+ */
+export const SCROLL_TIMELINE_CONDITION =
+  "(animation-timeline: scroll()) and (animation-range: 0px 1px)";
+
+/**
+ * ¿Puede el navegador animar el pan del deck con una linea de tiempo de scroll?
+ * Entonces lo mueve el compositor, en sincronia con el dedo; si no, queda el pan
+ * por JS. Sin API de CSS no se puede asegurar: tambien JS.
+ */
+export function supportsScrollTimeline(css: CssApi | undefined): boolean {
+  return css?.supports?.(SCROLL_TIMELINE_CONDITION) === true;
 }
